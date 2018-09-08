@@ -12,6 +12,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import java.awt.event.MouseMotionAdapter;
+import java.util.LinkedList;
 import java.awt.event.MouseEvent;
 
 public class ClientGUI extends JFrame implements Runnable{
@@ -24,13 +25,14 @@ public class ClientGUI extends JFrame implements Runnable{
 	private Thread run;
 	private boolean clientRunning=false;
 	private int ID=0;
-	private Point start;
-    private Point stop;
-    private Shape shape;
+	
     private Canvas mainCanvas;
-	public ClientGUI(String name,String IPAddress, int port){
+    private LinkedList<Integer> x_s = new LinkedList<Integer>();
+    private LinkedList<Integer> y_s = new LinkedList<Integer>();
+    private int index=0;
+	public ClientGUI(String name,String IPAddress, int port,String word){
 		showWindow();
-		client = new Client(name,IPAddress,port);
+		client = new Client(name,IPAddress,port,word);
 		boolean connected=client.connect(IPAddress,port);
 		System.out.println("Name: "+name+" IP: "+IPAddress+" Port: "+port);
 		String connectPacket = "00"+name;
@@ -69,8 +71,14 @@ public class ClientGUI extends JFrame implements Runnable{
 						String[] xy=message.substring(2).split(",");
 						int x = Integer.parseInt(xy[0]);
 						int y = Integer.parseInt(xy[1].trim());
+
+						x_s.add(x);
+						y_s.add(y);
+						index++;
 						Graphics g = mainCanvas.getGraphics();
-						g.fillOval(x, y, 3, 3);
+						g.fillOval(x+1, y-1, 2, 2);
+						g.fillOval(x-1, y-1, 2, 2);
+						g.fillOval(x, y, 4, 4);
 					}
 				}
 			}

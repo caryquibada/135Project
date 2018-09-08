@@ -15,16 +15,22 @@ public class Client {
 	private String message;
 	private ClientGUI clientgui;
 	private Thread sendMessage,receive;
+	private String word;
 	
-	public Client(String name, String IPAddress, int port){
+	public Client(String name, String IPAddress, int port,String word){
 		this.name=name;
 		this.IPAddress=IPAddress;
 		this.port=port;
+		this.word=word;
 	}
 	public String getName(){
 		return name;
 	}
-
+	
+	public String getWord(){
+		return word;
+	}
+	
 	public void setID(int ID){
 		this.ID=ID;
 	}
