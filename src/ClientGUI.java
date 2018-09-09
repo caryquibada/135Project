@@ -14,6 +14,8 @@ import javax.swing.border.EmptyBorder;
 import java.awt.event.MouseMotionAdapter;
 import java.util.LinkedList;
 import java.awt.event.MouseEvent;
+import javax.swing.JButton;
+import java.awt.event.MouseAdapter;
 
 public class ClientGUI extends JFrame implements Runnable{
 
@@ -79,6 +81,10 @@ public class ClientGUI extends JFrame implements Runnable{
 						g.fillOval(x+1, y-1, 2, 2);
 						g.fillOval(x-1, y-1, 2, 2);
 						g.fillOval(x, y, 4, 4);
+					}else if(message.startsWith("03")){
+						Graphics g = mainCanvas.getGraphics();
+						g.setColor(Color.WHITE);
+						g.fillRect(0, 0, getWidth(), getHeight());
 					}
 				}
 			}
@@ -127,6 +133,17 @@ public class ClientGUI extends JFrame implements Runnable{
 		mainCanvas.setBackground(Color.WHITE);
 		mainCanvas.setBounds(10, 69, 693, 491);
 		contentPane.add(mainCanvas);
+		
+		JButton ClearButton = new JButton("Clear Board");
+		ClearButton.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent arg0) {
+				String clear="03Clear";
+				client.sendMessage(clear.getBytes());
+			}
+		});
+		ClearButton.setBounds(21, 13, 89, 23);
+		contentPane.add(ClearButton);
 		mainCanvas.addMouseMotionListener(new MouseMotionAdapter() {
 			@Override
 			public void mouseDragged(MouseEvent e) {

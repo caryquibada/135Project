@@ -6,8 +6,6 @@ import java.net.SocketException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-import java.util.UUID;
 
 public class Server implements Runnable{
 	
@@ -60,7 +58,9 @@ public class Server implements Runnable{
 			sendMessage(ID.getBytes(), packet.getAddress(), packet.getPort());
 		}else if(message.startsWith("01")){//01 For message;
 			sendToClients(message);
-		}else if(message.startsWith("02")){
+		}else if(message.startsWith("02")){//02 For Canvas Drawing
+			sendToClients(message);
+		}else if(message.startsWith("03")){//03 For Clearing the Board
 			sendToClients(message);
 		}
 	}
