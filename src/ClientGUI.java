@@ -66,14 +66,13 @@ public class ClientGUI extends JFrame implements Runnable{
 					String message=client.receive();
 					if(message.startsWith("00")){ //Login
 						client.setID(Integer.parseInt(message.substring(3,message.length()).trim()));
-						printToChat(message);
+						sendPacket(client.getName()+" has connected");
 					}else if(message.startsWith("01")){ //Chat
 						printToChat(message);
 					}else if(message.startsWith("02")){ //Drawing
 						String[] xy=message.substring(2).split(",");
 						int x = Integer.parseInt(xy[0]);
 						int y = Integer.parseInt(xy[1].trim());
-
 						x_s.add(x);
 						y_s.add(y);
 						index++;

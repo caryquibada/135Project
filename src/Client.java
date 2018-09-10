@@ -17,6 +17,9 @@ public class Client {
 	private Thread sendMessage,receive;
 	private String word;
 	
+	private boolean myTurn=false; //If turn to guess
+	private int guessTurn=0; //Guess turn number
+	
 	public Client(String name, String IPAddress, int port,String word){
 		this.name=name;
 		this.IPAddress=IPAddress;
@@ -37,6 +40,21 @@ public class Client {
 	public int getID(){
 		return this.ID;
 	}
+	public void setMyTurn(){
+		if(myTurn){
+			this.myTurn=false;
+		}else{
+			this.myTurn=true;
+		}
+	}
+	public void setGuessTurn(int turnNumber){
+		this.guessTurn=turnNumber;
+	}
+	public int getGuessTurn(){
+		return this.guessTurn;
+	}
+	
+	/*Connecting to the server by opening a socket*/
 	public boolean connect(String IPAddress, int port){
 		try {
 			socket = new DatagramSocket();
@@ -48,6 +66,8 @@ public class Client {
 		}
 		return true;
 	}
+	
+	/*Receiving a message from the server*/
 	public String receive(){
 		byte[] data = new byte[1024];
 		DatagramPacket receivePacket = new DatagramPacket(data,data.length);
@@ -60,6 +80,8 @@ public class Client {
 		return message;
 
 	}
+	
+	/*Sending a message to the server*/
 	public void sendMessage(final byte[] data){
 		sendMessage = new Thread("Send"){
 			public void run(){
