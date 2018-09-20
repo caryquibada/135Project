@@ -1,4 +1,7 @@
+import java.awt.EventQueue;
 import java.util.Scanner;
+
+import javax.swing.JOptionPane;
 public class RunServer {
 	
 	private Server server;
@@ -8,11 +11,10 @@ public class RunServer {
 		new Server(port);
 	}
 	public static void main(String[] args){
-		Scanner sc = new Scanner(System.in);
-		System.out.print("Enter port number: ");
-		int port = sc.nextInt();
-		sc.close();
+		int port=Integer.parseInt(JOptionPane.showInputDialog("Enter Server Port Number: "));
 		new RunServer(port);
 		
 	}
+	
+	
 }

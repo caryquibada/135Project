@@ -16,6 +16,9 @@ import java.util.LinkedList;
 import java.awt.event.MouseEvent;
 import javax.swing.JButton;
 import java.awt.event.MouseAdapter;
+import java.awt.Font;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class ClientGUI extends JFrame implements Runnable{
 
@@ -33,6 +36,13 @@ public class ClientGUI extends JFrame implements Runnable{
     private LinkedList<Integer> y_s = new LinkedList<Integer>();
     private int index=0;
 	public ClientGUI(String name,String IPAddress, int port,String word){
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent arg0) {
+				String disconnectMessage="04"+name;
+				client.sendMessage(disconnectMessage.getBytes());
+			}
+		});
 		showWindow();
 		client = new Client(name,IPAddress,port,word);
 		boolean connected=client.connect(IPAddress,port);
@@ -43,21 +53,32 @@ public class ClientGUI extends JFrame implements Runnable{
 		run = new Thread(this,"Client Thread");
 		run.start();
 	}
+	//Appending to chat text area
 	public void printToChat(String message){
 		ChatHistory.append(message.substring(2)+"\n");
 	}
-
+	
+	//Sending to the client class the message for it to process.
 	public void sendPacket(String chatMessage){
 		chatMessage = "01"+chatMessage;
 		client.sendMessage(chatMessage.getBytes());
 		ChatBox.setText("");
 	}
+	
+	//Sending x and y coordinate to client class to send the message to server
 	public void sendXY(String XY){
 		client.sendMessage(XY.getBytes());
 	}
 	public void run() {
 		constantReceive();
 	}
+	
+	//Constant receiving of message from the server and parsing the message.
+	//Different prefixes are assigned to different server responses
+	//00 for login that sets the ID of the client
+	//01 for chat message and it appends to the text area
+	//02 for drawings being received and adding the information to the canvas
+	//03 for clearing the canvas when the button for clearing the board is cleared
 	public void constantReceive(){
 		System.out.println(clientRunning);
 		constantReceive = new Thread("constantReceive"){
@@ -80,7 +101,7 @@ public class ClientGUI extends JFrame implements Runnable{
 						g.fillOval(x+1, y-1, 2, 2);
 						g.fillOval(x-1, y-1, 2, 2);
 						g.fillOval(x, y, 4, 4);
-					}else if(message.startsWith("03")){
+					}else if(message.startsWith("03")){ //Clear Board
 						Graphics g = mainCanvas.getGraphics();
 						g.setColor(Color.WHITE);
 						g.fillRect(0, 0, getWidth(), getHeight());
@@ -100,12 +121,15 @@ public class ClientGUI extends JFrame implements Runnable{
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 900, 600);
 		contentPane = new JPanel();
+		contentPane.setBackground(new Color(240, 255, 255));
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		
 		//ChatHistory Text Area
 		ChatHistory = new JTextArea();
+		ChatHistory.setLineWrap(true);
+		ChatHistory.setFont(new Font("Monospaced", Font.PLAIN, 13));
 		ChatHistory.setEditable(false);
 		
 		JScrollPane ChatScroll= new JScrollPane(ChatHistory);
@@ -134,6 +158,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		contentPane.add(mainCanvas);
 		
 		JButton ClearButton = new JButton("Clear Board");
+		ClearButton.setBackground(new Color(255, 255, 255));
 		ClearButton.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent arg0) {
@@ -141,6 +166,7 @@ public class ClientGUI extends JFrame implements Runnable{
 				client.sendMessage(clear.getBytes());
 			}
 		});
+		
 		ClearButton.setBounds(21, 13, 89, 23);
 		contentPane.add(ClearButton);
 		mainCanvas.addMouseMotionListener(new MouseMotionAdapter() {

@@ -14,4 +14,16 @@ public class ClientStorage {
 		this.port=port;
 		this.ID=ID;
 	}
+	public int getID(){
+		return this.ID;
+	}
+	public int getPort(){
+		return this.port;
+	}
+	public InetAddress getAddress(){
+		return this.address;
+	}
+	public String getName(){
+		return this.name;
+	}
 }

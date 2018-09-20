@@ -9,6 +9,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
+import java.awt.Color;
 
 public class LoginGUI extends JFrame {
 
@@ -20,11 +21,14 @@ public class LoginGUI extends JFrame {
 	private JLabel lblPort;
 	private JTextField WordField;
 	public LoginGUI() {
+		setBackground(new Color(255, 255, 255));
+		setForeground(new Color(255, 255, 255));
 		setResizable(false);
 		setTitle("Login");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 495, 227);
 		contentPane = new JPanel();
+		contentPane.setBackground(new Color(255, 255, 255));
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
@@ -76,6 +80,8 @@ public class LoginGUI extends JFrame {
 		
 		//LOGIN button
 		JButton LoginBTN = new JButton("LOGIN");
+		LoginBTN.setForeground(new Color(0, 51, 0));
+		LoginBTN.setBackground(new Color(255, 255, 255));
 		LoginBTN.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent arg0) {
@@ -86,7 +92,7 @@ public class LoginGUI extends JFrame {
 				login(name,IPAddress,port,word);
 			}
 		});
-		LoginBTN.setFont(new Font("Arial Black", Font.PLAIN, 18));
+		LoginBTN.setFont(new Font("Yu Gothic UI", Font.BOLD, 26));
 		LoginBTN.setBounds(10, 130, 468, 61);
 		contentPane.add(LoginBTN);
 		
