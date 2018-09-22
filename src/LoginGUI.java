@@ -2,6 +2,8 @@
 import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -20,7 +22,7 @@ public class LoginGUI extends JFrame {
 	private JLabel lblIpAddress;
 	private JLabel lblPort;
 	private JTextField WordField;
-	public LoginGUI() {
+	public LoginGUI() throws UnknownHostException {
 		setBackground(new Color(255, 255, 255));
 		setForeground(new Color(255, 255, 255));
 		setResizable(false);
@@ -46,7 +48,8 @@ public class LoginGUI extends JFrame {
 		//IP text field
 		IPField = new JTextField();
 		IPField.setFont(new Font("Arial", Font.PLAIN, 15));
-		IPField.setText("localhost");
+		String[] IP = InetAddress.getLocalHost().toString().split("/");
+		IPField.setText(IP[1]);
 		IPField.setColumns(10);
 		IPField.setBounds(115, 75, 130, 44);
 		contentPane.add(IPField);

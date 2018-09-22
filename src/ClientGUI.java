@@ -94,12 +94,12 @@ public class ClientGUI extends JFrame implements Runnable{
 						String[] xy=message.substring(2).split(",");
 						int x = Integer.parseInt(xy[0]);
 						int y = Integer.parseInt(xy[1].trim());
-						x_s.add(x);
-						y_s.add(y);
-						index++;
+						//x_s.add(x);
+						//y_s.add(y);
+						//index++;
 						Graphics g = mainCanvas.getGraphics();
-						g.fillOval(x+1, y-1, 2, 2);
-						g.fillOval(x-1, y-1, 2, 2);
+						//g.fillOval(x+1, y-1, 2, 2);
+						//g.fillOval(x-1, y-1, 2, 2);
 						g.fillOval(x, y, 4, 4);
 					}else if(message.startsWith("03")){ //Clear Board
 						Graphics g = mainCanvas.getGraphics();
@@ -174,7 +174,7 @@ public class ClientGUI extends JFrame implements Runnable{
 			public void mouseDragged(MouseEvent e) {
 				Graphics g = mainCanvas.getGraphics();
 				g.fillOval(e.getX(), e.getY(), 3, 3);
-				String xAndy = "02"+e.getX()+","+e.getY();
+				String xAndy = "02"+e.getX()+","+e.getY()+","+client.getID();
 				sendXY(xAndy);
 			}
 		});

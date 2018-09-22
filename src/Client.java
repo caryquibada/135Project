@@ -69,7 +69,7 @@ public class Client {
 	
 	/*Receiving a message from the server*/
 	public String receive(){
-		byte[] data = new byte[1024];
+		byte[] data = new byte[128];
 		DatagramPacket receivePacket = new DatagramPacket(data,data.length);
 		try {
 			socket.receive(receivePacket);
@@ -78,22 +78,16 @@ public class Client {
 		}
 		String message = new String(receivePacket.getData());
 		return message;
-
 	}
 	
 	/*Sending a message to the server*/
 	public void sendMessage(final byte[] data){
-		sendMessage = new Thread("Send"){
-			public void run(){
-				DatagramPacket sendPacket = new DatagramPacket(data,data.length,IP,port);
-				try {
-					socket.send(sendPacket);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		};
-		sendMessage.start();
+		DatagramPacket sendPacket = new DatagramPacket(data,data.length,IP,port);
+		try{
+			socket.send(sendPacket);
+		}catch(IOException e){
+			e.printStackTrace();
+		}
 	}
 
 }
