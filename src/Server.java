@@ -13,9 +13,11 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
+import javax.swing.text.DefaultCaret;
 import javax.swing.JTextArea;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import javax.swing.JScrollPane;
 
 public class Server extends JFrame implements Runnable{
 	
@@ -28,6 +30,7 @@ public class Server extends JFrame implements Runnable{
 	private JTextArea responseLog;
 	private JTextField commandLine;
 	Thread clients;
+	private JScrollPane scrollPane;
 	public Server(int port) throws UnknownHostException{ //Constructor for opening the Datagram Socket on port given by the server creator.
 		this.port=port;
 		showWindow();
@@ -135,10 +138,22 @@ public class Server extends JFrame implements Runnable{
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		
+		responseLog = new JTextArea();
+		responseLog.setLineWrap(true);
+		responseLog.setEditable(false);
+		responseLog.setBounds(10, 11, 564, 283);
+		contentPane.add(responseLog);
+		DefaultCaret caret = (DefaultCaret)responseLog.getCaret();
+		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+		
 		commandLine = new JTextField();
 		commandLine.setBounds(10, 305, 564, 45);
 		contentPane.add(commandLine);
 		commandLine.setColumns(10);
+		
+		scrollPane = new JScrollPane(responseLog);
+		scrollPane.setBounds(10, 11, 564, 283);
+		contentPane.add(scrollPane);
 		commandLine.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyReleased(KeyEvent KE) {
@@ -147,12 +162,7 @@ public class Server extends JFrame implements Runnable{
 				}
 			}
 		});
-		
-		
-		responseLog = new JTextArea();
-		responseLog.setEditable(false);
-		responseLog.setBounds(10, 11, 564, 283);
-		contentPane.add(responseLog);
+	
 	}
 	
 	

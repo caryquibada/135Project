@@ -11,8 +11,12 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
+import javax.swing.text.DefaultCaret;
+
 import java.awt.event.MouseMotionAdapter;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.awt.event.MouseEvent;
 import javax.swing.JButton;
 import java.awt.event.MouseAdapter;
@@ -32,8 +36,8 @@ public class ClientGUI extends JFrame implements Runnable{
 	private int ID=0;
 	
     private Canvas mainCanvas;
-    private LinkedList<Integer> x_s = new LinkedList<Integer>();
-    private LinkedList<Integer> y_s = new LinkedList<Integer>();
+    private List<Point> xs = new ArrayList<Point>();
+    private List<Point> ys = new ArrayList<Point>();
     private int index=0;
 	public ClientGUI(String name,String IPAddress, int port,String word){
 		addWindowListener(new WindowAdapter() {
@@ -56,6 +60,7 @@ public class ClientGUI extends JFrame implements Runnable{
 	//Appending to chat text area
 	public void printToChat(String message){
 		ChatHistory.append(message.substring(2)+"\n");
+		
 	}
 	
 	//Sending to the client class the message for it to process.
@@ -85,33 +90,36 @@ public class ClientGUI extends JFrame implements Runnable{
 			public void run(){
 				while(clientRunning){
 					String message=client.receive();
-					if(message.startsWith("00")){ //Login
-						client.setID(Integer.parseInt(message.substring(3,message.length()).trim()));
-						sendPacket(client.getName()+" has connected");
-					}else if(message.startsWith("01")){ //Chat
-						printToChat(message);
-					}else if(message.startsWith("02")){ //Drawing
-						String[] xy=message.substring(2).split(",");
-						int x = Integer.parseInt(xy[0]);
-						int y = Integer.parseInt(xy[1].trim());
-						//x_s.add(x);
-						//y_s.add(y);
-						//index++;
-						Graphics g = mainCanvas.getGraphics();
-						//g.fillOval(x+1, y-1, 2, 2);
-						//g.fillOval(x-1, y-1, 2, 2);
-						g.fillOval(x, y, 4, 4);
-					}else if(message.startsWith("03")){ //Clear Board
-						Graphics g = mainCanvas.getGraphics();
-						g.setColor(Color.WHITE);
-						g.fillRect(0, 0, getWidth(), getHeight());
-					}
+					parseMessage(message);
 				}
 			}
 		};
 		constantReceive.start();
 	}
 	
+	public void parseMessage(String message){
+		if(message.startsWith("00")){ //Login
+			client.setID(Integer.parseInt(message.substring(3,message.length()).trim()));
+			sendPacket(client.getName()+" has connected");
+		}else if(message.startsWith("01")){ //Chat
+			printToChat(message);
+		}else if(message.startsWith("02")){ //Drawing
+			String[] xy=message.substring(2).split(",");
+			int x = Integer.parseInt(xy[0]);
+			int y = Integer.parseInt(xy[1].trim());
+			//x_s.add(x);
+			//y_s.add(y);
+			//index++;
+			Graphics g = mainCanvas.getGraphics();
+			//g.fillOval(x+1, y-1, 2, 2);
+			//g.fillOval(x-1, y-1, 2, 2);
+			g.fillOval(x, y, 4, 4);
+		}else if(message.startsWith("03")){ //Clear Board
+			Graphics g = mainCanvas.getGraphics();
+			g.setColor(Color.WHITE);
+			g.fillRect(0, 0, getWidth(), getHeight());
+		}
+	}
 
 	//GUI stuff(ignore)
 	public void showWindow() {
@@ -131,6 +139,8 @@ public class ClientGUI extends JFrame implements Runnable{
 		ChatHistory.setLineWrap(true);
 		ChatHistory.setFont(new Font("Monospaced", Font.PLAIN, 13));
 		ChatHistory.setEditable(false);
+		DefaultCaret caret = (DefaultCaret)ChatHistory.getCaret();
+		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 		
 		JScrollPane ChatScroll= new JScrollPane(ChatHistory);
 		ChatScroll.setBounds(720, 11, 164, 491);
@@ -140,7 +150,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		ChatBox = new JTextField();
 		ChatBox.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent KE) {
-				if(KE.getKeyCode()==KeyEvent.VK_ENTER){
+				if(KE.getKeyCode()==KeyEvent.VK_ENTER&&!ChatBox.getText().isEmpty()){
 					sendPacket(client.getName()+": "+ChatBox.getText());
 				}
 			}
@@ -173,7 +183,7 @@ public class ClientGUI extends JFrame implements Runnable{
 			@Override
 			public void mouseDragged(MouseEvent e) {
 				Graphics g = mainCanvas.getGraphics();
-				g.fillOval(e.getX(), e.getY(), 3, 3);
+				g.fillOval(e.getX(), e.getY(), 4, 4);
 				String xAndy = "02"+e.getX()+","+e.getY()+","+client.getID();
 				sendXY(xAndy);
 			}
