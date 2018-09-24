@@ -1,3 +1,7 @@
+/*Code and structure for chat, client storage and handling login from user "TheChernoProject" on Youtube
+ * Youtube Channel: https://www.youtube.com/user/TheChernoProject
+ * Github Repo: https://github.com/TheCherno/ChernoChat/tree/master/src/com/thecherno/chernochat 
+ * Github,Youtube. (2014). Cherno Chat. [online] Available at: https://github.com/TheCherno/ChernoChat/tree/master/src/com/thecherno/chernochat, https://www.youtube.com/user/TheChernoProject [Accessed 24 Sep. 2018].*/
 
 import java.awt.Font;
 import java.awt.event.MouseAdapter;
@@ -12,6 +16,8 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import java.awt.Color;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 public class LoginGUI extends JFrame {
 
@@ -23,6 +29,7 @@ public class LoginGUI extends JFrame {
 	private JLabel lblPort;
 	private JTextField WordField;
 	public LoginGUI() throws UnknownHostException {
+		
 		setBackground(new Color(255, 255, 255));
 		setForeground(new Color(255, 255, 255));
 		setResizable(false);
@@ -30,6 +37,7 @@ public class LoginGUI extends JFrame {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 495, 227);
 		contentPane = new JPanel();
+		
 		contentPane.setBackground(new Color(255, 255, 255));
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -98,6 +106,7 @@ public class LoginGUI extends JFrame {
 		LoginBTN.setFont(new Font("Yu Gothic UI", Font.BOLD, 26));
 		LoginBTN.setBounds(10, 130, 468, 61);
 		contentPane.add(LoginBTN);
+		
 		
 		
 	}

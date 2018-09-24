@@ -1,3 +1,8 @@
+/*Code and structure for chat, client storage and handling login from user "TheChernoProject" on Youtube
+ * Youtube Channel: https://www.youtube.com/user/TheChernoProject
+ * Github Repo: https://github.com/TheCherno/ChernoChat/tree/master/src/com/thecherno/chernochat 
+ * Github,Youtube. (2014). Cherno Chat. [online] Available at: https://github.com/TheCherno/ChernoChat/tree/master/src/com/thecherno/chernochat, https://www.youtube.com/user/TheChernoProject [Accessed 24 Sep. 2018].*/
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -17,6 +22,7 @@ public class Client {
 	private Thread sendMessage,receive;
 	private String word;
 	private boolean myTurn=false; //If turn to guess
+	public String ready="false";
 	private int guessTurn=0; //Guess turn number
 	
 	public Client(String name, String IPAddress, int port,String word){
@@ -46,6 +52,9 @@ public class Client {
 			this.myTurn=true;
 		}
 	}
+	public boolean getMyTurn(){
+		return this.myTurn;
+	}
 	public void setGuessTurn(int turnNumber){
 		this.guessTurn=turnNumber;
 	}
@@ -58,7 +67,6 @@ public class Client {
 		try {
 			socket = new DatagramSocket();
 			IP=InetAddress.getByName(IPAddress);
-			System.out.println("Connected");
 		} catch (UnknownHostException | SocketException e) {
 			e.printStackTrace();
 			return false;
@@ -88,7 +96,4 @@ public class Client {
 			e.printStackTrace();
 		}
 	}
-	
-	
-
 }

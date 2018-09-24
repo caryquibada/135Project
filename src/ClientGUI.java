@@ -1,3 +1,8 @@
+/*Code and structure for chat, client storage and handling login from user "TheChernoProject" on Youtube
+ * Youtube Channel: https://www.youtube.com/user/TheChernoProject
+ * Github Repo: https://github.com/TheCherno/ChernoChat/tree/master/src/com/thecherno/chernochat 
+ * Github,Youtube. (2014). Cherno Chat. [online] Available at: https://github.com/TheCherno/ChernoChat/tree/master/src/com/thecherno/chernochat, https://www.youtube.com/user/TheChernoProject [Accessed 24 Sep. 2018].*/
+
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Graphics;
@@ -25,6 +30,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.Font;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import javax.swing.SwingConstants;
 
 public class ClientGUI extends JFrame implements Runnable{
 
@@ -36,7 +42,7 @@ public class ClientGUI extends JFrame implements Runnable{
 	private Thread run;
 	private boolean clientRunning=false;
 	private int ID=0,seconds;
-	
+	private int currXsend,currYsend,currXreceive,currYreceive;
     private Canvas mainCanvas;
     private List<Point> xs = new ArrayList<Point>();
     private List<Point> ys = new ArrayList<Point>();
@@ -51,9 +57,8 @@ public class ClientGUI extends JFrame implements Runnable{
 			}
 		});
 		showWindow();
-		setSeconds(3);
-		countDown();
 		client = new Client(name,IPAddress,port,word);
+		client.setMyTurn();
 		boolean connected=client.connect(IPAddress,port);
 		System.out.println("Name: "+name+" IP: "+IPAddress+" Port: "+port);
 		String connectPacket = "00"+name;
@@ -64,7 +69,7 @@ public class ClientGUI extends JFrame implements Runnable{
 	}
 	//Appending to chat text area
 	public void printToChat(String message){
-		ChatHistory.append(message.substring(2)+"\n");
+		ChatHistory.append(message.substring(2).trim()+"\n");
 		
 	}
 	
@@ -95,6 +100,7 @@ public class ClientGUI extends JFrame implements Runnable{
 			public void run(){
 				while(clientRunning){
 					String message=client.receive();
+					
 					parseMessage(message);
 				}
 			}
@@ -105,24 +111,36 @@ public class ClientGUI extends JFrame implements Runnable{
 	public void parseMessage(String message){
 		if(message.startsWith("00")){ //Login
 			client.setID(Integer.parseInt(message.substring(3,message.length()).trim()));
+			
 			sendPacket(client.getName()+" has connected");
 		}else if(message.startsWith("01")){ //Chat
-			printToChat(message);
+			String[] chatMessage=message.split(":");
+			if(chatMessage.length>1){
+				if(client.getName().equals(chatMessage[0].substring(2).trim())&&chatMessage[1].trim().equals("/ready")){
+					client.ready="true";
+					client.sendMessage(("05"+client.getName()).getBytes());
+				}else{
+					printToChat(message);
+				}
+			}else{
+				printToChat(message);
+			}
 		}else if(message.startsWith("02")){ //Drawing
 			String[] xy=message.substring(2).split(",");
-			int x = Integer.parseInt(xy[0]);
-			int y = Integer.parseInt(xy[1].trim());
-			//x_s.add(x);
-			//y_s.add(y);
-			//index++;
+			int oldx=Integer.parseInt(xy[0]);
+			int oldy=Integer.parseInt(xy[1]);
+			int x = Integer.parseInt(xy[2]);
+			int y = Integer.parseInt(xy[3].trim());
 			Graphics g = mainCanvas.getGraphics();
-			//g.fillOval(x+1, y-1, 2, 2);
-			//g.fillOval(x-1, y-1, 2, 2);
-			g.fillOval(x, y, 4, 4);
+			g.drawLine(oldx, oldy, x, y);
 		}else if(message.startsWith("03")){ //Clear Board
 			Graphics g = mainCanvas.getGraphics();
 			g.setColor(Color.WHITE);
 			g.fillRect(0, 0, getWidth(), getHeight());
+		}else if(message.startsWith("06")){ //Count down 
+			int numberOfReadyPlayers=Integer.parseInt(message.substring(2).trim());
+			setSeconds(numberOfReadyPlayers);
+			countDown();
 		}
 	}
 	
@@ -134,7 +152,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 900, 600);
 		contentPane = new JPanel();
-		contentPane.setBackground(new Color(240, 255, 255));
+		contentPane.setBackground(new Color(245, 255, 250));
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
@@ -142,7 +160,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		//ChatHistory Text Area
 		ChatHistory = new JTextArea();
 		ChatHistory.setLineWrap(true);
-		ChatHistory.setFont(new Font("Monospaced", Font.PLAIN, 13));
+		ChatHistory.setFont(new Font("Arial", Font.PLAIN, 14));
 		ChatHistory.setEditable(false);
 		DefaultCaret caret = (DefaultCaret)ChatHistory.getCaret();
 		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
@@ -186,18 +204,44 @@ public class ClientGUI extends JFrame implements Runnable{
 		contentPane.add(ClearButton);
 		
 		timerWindow = new JTextField();
+		timerWindow.setHorizontalAlignment(SwingConstants.CENTER);
+		timerWindow.setBackground(new Color(245, 255, 250));
 		timerWindow.setEditable(false);
 		timerWindow.setFont(new Font("Oxygen", Font.BOLD, 16));
-		timerWindow.setBounds(652, 11, 51, 47);
+		timerWindow.setBounds(676, 11, 34, 47);
 		contentPane.add(timerWindow);
 		timerWindow.setColumns(10);
+		
+		JButton changeTurn = new JButton("Turn");
+		changeTurn.setBackground(new Color(255, 255, 255));
+		changeTurn.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent arg0) {
+				client.setMyTurn();
+			}
+		});
+		changeTurn.setBounds(119, 13, 89, 23);
+		contentPane.add(changeTurn);
+		mainCanvas.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				currXsend=e.getX();
+				currYsend=e.getY();
+			}
+		});
 		mainCanvas.addMouseMotionListener(new MouseMotionAdapter() {
 			@Override
 			public void mouseDragged(MouseEvent e) {
-				Graphics g = mainCanvas.getGraphics();
-				g.fillOval(e.getX(), e.getY(), 4, 4);
-				String xAndy = "02"+e.getX()+","+e.getY()+","+client.getID();
-				sendXY(xAndy);
+				if(client.getMyTurn()){
+					Graphics g = mainCanvas.getGraphics();
+					int oldXsend=currXsend;
+					int oldYsend=currYsend;
+					currXsend=e.getX();
+					currYsend=e.getY();
+					g.drawLine(oldXsend, oldYsend, currXsend, currYsend);
+					String xAndy = "02"+oldXsend+","+oldYsend+","+e.getX()+","+e.getY()+","+client.getID();
+					sendXY(xAndy);
+				}
 			}
 		});
 		
@@ -206,11 +250,12 @@ public class ClientGUI extends JFrame implements Runnable{
 		Timer timer = new Timer();
 		timer.schedule(new TimerTask(){
 			public void run(){
-
-				timerWindow.setText(seconds+"");
 				seconds--;
-				if(seconds==0)
+				timerWindow.setText(seconds+"");
+				if(seconds==0){
+					client.setMyTurn();
 					timer.cancel();
+				}
 			}
 		},0,1000);
 	}

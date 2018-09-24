@@ -11,9 +11,13 @@ public class RunServer {
 		this.port=port;
 		new Server(port);
 	}
-	public static void main(String[] args) throws UnknownHostException{
+	public static void main(String[] args){
 		int port=Integer.parseInt(JOptionPane.showInputDialog("Enter Server Port Number: "));
-		new RunServer(port);
+		try {
+			new RunServer(port);
+		} catch (UnknownHostException e) {
+			JOptionPane.showMessageDialog(null, "Port is already taken");
+		}
 		
 	}
 }

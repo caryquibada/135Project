@@ -1,3 +1,9 @@
+/*Code and structure for chat, client storage and handling login from user "TheChernoProject" on Youtube
+ * Youtube Channel: https://www.youtube.com/user/TheChernoProject
+ * Github Repo: https://github.com/TheCherno/ChernoChat/tree/master/src/com/thecherno/chernochat 
+ * Github,Youtube. (2014). Cherno Chat. [online] Available at: https://github.com/TheCherno/ChernoChat/tree/master/src/com/thecherno/chernochat, https://www.youtube.com/user/TheChernoProject [Accessed 24 Sep. 2018].*/
+
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -33,6 +39,8 @@ public class Server extends JFrame implements Runnable{
 	private JTextField commandLine;
 	Thread clients;
 	private JScrollPane scrollPane;
+
+
 	public Server(int port) throws UnknownHostException{ //Constructor for opening the Datagram Socket on port given by the server creator.
 		this.port=port;
 		showWindow();
@@ -90,14 +98,48 @@ public class Server extends JFrame implements Runnable{
 			disconnectClient(message);
 			sendToClients("01"+message.substring(2).trim()+" has disconnected!");
 			logToServer(message.substring(2).trim()+" has disconnected!");
+		}else if(message.startsWith("05")){
+			String nameReady=message.substring(2).trim();
+			sendToClients("01"+nameReady+" is ready");
+			for(int i=0;i<clientList.size();i++){
+				if(clientList.get(i).getName().trim().equals(nameReady)){
+					clientList.get(i).ready="true";
+				}
+			}
+			checkGameStart();
+			String playersReady="";
+			for(int i=0;i<clientList.size();i++){
+				if(clientList.get(i).ready.equals("true"))
+					playersReady=playersReady+clientList.get(i).getName()+" ";
+			}
+			sendToClients("01Ready players are "+playersReady);
 		}
 	}
+	
+	public void checkGameStart(){
+		int readyPlayers=0;
+		for(int i=0;i<clientList.size();i++){
+			if(clientList.get(i).ready.equals("true"))
+				readyPlayers++;
+		}
+		if(readyPlayers==clientList.size()){
+			if(readyPlayers>3){
+				sendToClients("01\nGame is about to start. First guesser is "+clientList.get(0).getName());
+				sendToClients("06"+clientList.size());
+			}else{
+				sendToClients("01\nAll players are ready but the game needs atleast 4 players to start.");
+			}
+		}else{
+			sendToClients("01\nWaiting for all players to ready up. Current: "+readyPlayers);
+		}
+	}
+	
 	/*Iterating through client list to pass message to all clients*/
 	public void sendToClients(String message){
 		//If user is painting, he/she will not receive the coordinates for his/her painting
 		if(message.startsWith("02")){ 
 			String[] canvasInfo=message.split(",");
-			int userID=Integer.parseInt(canvasInfo[2].trim());
+			int userID=Integer.parseInt(canvasInfo[4].trim());
 			for(int i=0;i<clientList.size();i++){
 				ClientStorage client = clientList.get(i);
 				if(userID!=client.getID()){
