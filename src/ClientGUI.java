@@ -17,6 +17,8 @@ import java.awt.event.MouseMotionAdapter;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.awt.event.MouseEvent;
 import javax.swing.JButton;
 import java.awt.event.MouseAdapter;
@@ -33,12 +35,13 @@ public class ClientGUI extends JFrame implements Runnable{
 	private Thread constantReceive;
 	private Thread run;
 	private boolean clientRunning=false;
-	private int ID=0;
+	private int ID=0,seconds;
 	
     private Canvas mainCanvas;
     private List<Point> xs = new ArrayList<Point>();
     private List<Point> ys = new ArrayList<Point>();
     private int index=0;
+    private JTextField timerWindow;
 	public ClientGUI(String name,String IPAddress, int port,String word){
 		addWindowListener(new WindowAdapter() {
 			@Override
@@ -48,6 +51,8 @@ public class ClientGUI extends JFrame implements Runnable{
 			}
 		});
 		showWindow();
+		setSeconds(3);
+		countDown();
 		client = new Client(name,IPAddress,port,word);
 		boolean connected=client.connect(IPAddress,port);
 		System.out.println("Name: "+name+" IP: "+IPAddress+" Port: "+port);
@@ -120,7 +125,7 @@ public class ClientGUI extends JFrame implements Runnable{
 			g.fillRect(0, 0, getWidth(), getHeight());
 		}
 	}
-
+	
 	//GUI stuff(ignore)
 	public void showWindow() {
 		setVisible(true);
@@ -179,6 +184,13 @@ public class ClientGUI extends JFrame implements Runnable{
 		
 		ClearButton.setBounds(21, 13, 89, 23);
 		contentPane.add(ClearButton);
+		
+		timerWindow = new JTextField();
+		timerWindow.setEditable(false);
+		timerWindow.setFont(new Font("Oxygen", Font.BOLD, 16));
+		timerWindow.setBounds(652, 11, 51, 47);
+		contentPane.add(timerWindow);
+		timerWindow.setColumns(10);
 		mainCanvas.addMouseMotionListener(new MouseMotionAdapter() {
 			@Override
 			public void mouseDragged(MouseEvent e) {
@@ -189,5 +201,21 @@ public class ClientGUI extends JFrame implements Runnable{
 			}
 		});
 		
+	}
+	public void countDown(){
+		Timer timer = new Timer();
+		timer.schedule(new TimerTask(){
+			public void run(){
+
+				timerWindow.setText(seconds+"");
+				seconds--;
+				if(seconds==0)
+					timer.cancel();
+			}
+		},0,1000);
+	}
+	
+	public void setSeconds(int seconds){
+		this.seconds=seconds;
 	}
 }

@@ -16,6 +16,4 @@ public class RunServer {
 		new RunServer(port);
 		
 	}
-	
-	
 }

@@ -16,7 +16,6 @@ public class Client {
 	private ClientGUI clientgui;
 	private Thread sendMessage,receive;
 	private String word;
-	
 	private boolean myTurn=false; //If turn to guess
 	private int guessTurn=0; //Guess turn number
 	
@@ -89,5 +88,7 @@ public class Client {
 			e.printStackTrace();
 		}
 	}
+	
+	
 
 }

@@ -7,6 +7,8 @@ import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -24,7 +26,7 @@ public class Server extends JFrame implements Runnable{
 	private List<ClientStorage> clientList = new ArrayList<ClientStorage>();
 	
 	private DatagramSocket socket;
-	private int port;
+	private int port,seconds;
 	private Thread runServer,receive,send;
 	private boolean serverRunning;
 	private JTextArea responseLog;
@@ -191,6 +193,8 @@ public class Server extends JFrame implements Runnable{
 		}
 		return players;
 	}
+	
+	
 	
 	public void logToServer(String message){
 		responseLog.setText(responseLog.getText()+"\n"+message);
