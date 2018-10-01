@@ -17,11 +17,10 @@ public class Client {
 	private int ID;
 	private DatagramSocket socket;
 	private InetAddress IP;
-	private String message;
-	private ClientGUI clientgui;
-	private Thread sendMessage,receive;
 	private String word;
-	private boolean myTurn=false; //If turn to guess
+	public boolean drawer=true;
+	public boolean myTurn=false; //If turn to guess
+	public boolean drawTurn=false;
 	public String ready="false";
 	private int guessTurn=0; //Guess turn number
 	
@@ -45,15 +44,15 @@ public class Client {
 	public int getID(){
 		return this.ID;
 	}
-	public void setMyTurn(){
-		if(myTurn){
-			this.myTurn=false;
+	public void changeTurn(){
+		if(drawTurn){
+			this.drawTurn=false;
 		}else{
-			this.myTurn=true;
+			this.drawTurn=true;
 		}
 	}
 	public boolean getMyTurn(){
-		return this.myTurn;
+		return this.drawTurn;
 	}
 	public void setGuessTurn(int turnNumber){
 		this.guessTurn=turnNumber;

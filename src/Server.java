@@ -12,6 +12,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -30,7 +31,8 @@ import javax.swing.JScrollPane;
 public class Server extends JFrame implements Runnable{
 	
 	private List<ClientStorage> clientList = new ArrayList<ClientStorage>();
-	
+	public List<String> words= new ArrayList<String>();
+	public List<String> players = new ArrayList<String>();
 	private DatagramSocket socket;
 	private int port,seconds;
 	private Thread runServer,receive,send;
@@ -39,9 +41,10 @@ public class Server extends JFrame implements Runnable{
 	private JTextField commandLine;
 	Thread clients;
 	private JScrollPane scrollPane;
+	public int drawerTurn=1,guesserCount=1,currGuess=1,drawerCount=1,guessThreshold=1;
 
-
-	public Server(int port) throws UnknownHostException{ //Constructor for opening the Datagram Socket on port given by the server creator.
+	public Server(int port) throws UnknownHostException{
+		setResizable(false); //Constructor for opening the Datagram Socket on port given by the server creator.
 		this.port=port;
 		showWindow();
 		try {
@@ -81,41 +84,70 @@ public class Server extends JFrame implements Runnable{
 		String message = new String(packet.getData());
 		if(message.startsWith("00")){ //00 For login
 			int id = new SecureRandom().nextInt();
-			clientList.add(new ClientStorage(message.substring(2,message.length()),packet.getAddress(),packet.getPort(),id));
+			message=message.trim();
+			message=message.substring(2);
+			String[] messageArray=message.split(",");
+			clientList.add(new ClientStorage(messageArray[0],packet.getAddress(),packet.getPort(),id,messageArray[1]));
 			String ID = "00"+id;
 			sendMessage(ID.getBytes(), packet.getAddress(), packet.getPort());
 			logToServer("Client connected with IP: "+packet.getAddress());//Printing connecting client IP
 		}else if(message.startsWith("01")){//01 For message;
-			sendToClients(message);
+			sendToDrawers(message);
 			logToServer(message.substring(2).trim());
 		}else if(message.startsWith("02")){//02 For Canvas Drawing
-			sendToClients(message);
+			sendToDrawers(message);
 			//logToServer(message.substring(2).trim());
 		}else if(message.startsWith("03")){//03 For Clearing the Board
-			sendToClients(message);
+			sendToDrawers(message);
 			logToServer("Board cleared!");
 		}else if(message.startsWith("04")){//04 For Disconnection
 			disconnectClient(message);
-			sendToClients("01"+message.substring(2).trim()+" has disconnected!");
+			sendToDrawers("01"+message.substring(2).trim()+" has disconnected!");
 			logToServer(message.substring(2).trim()+" has disconnected!");
 		}else if(message.startsWith("05")){
 			String nameReady=message.substring(2).trim();
-			sendToClients("01"+nameReady+" is ready");
+			sendToDrawers("01"+nameReady+" is ready");
 			for(int i=0;i<clientList.size();i++){
 				if(clientList.get(i).getName().trim().equals(nameReady)){
 					clientList.get(i).ready="true";
 				}
 			}
 			checkGameStart();
-			String playersReady="";
-			for(int i=0;i<clientList.size();i++){
-				if(clientList.get(i).ready.equals("true"))
-					playersReady=playersReady+clientList.get(i).getName()+" ";
+		}else if(message.startsWith("10")){
+			if(drawerCount==players.size()){
+				if(drawerTurn<players.size()-1){
+					getCurrentDrawer();
+				}else if(drawerTurn==players.size()-1){
+					getCurrentDrawer();
+					drawerTurn=1;
+				}
+				drawerCount=0;
 			}
-			sendToClients("01Ready players are "+playersReady);
+			drawerCount++;
+		}else if(message.startsWith("12")){
+			if(guessThreshold==players.size()){
+				getGuesser();
+				guessThreshold=0;
+				System.out.println("12");
+			}
+			guessThreshold++;
+		}else if(message.startsWith("11")){
+			if(currGuess==players.size()){
+				String currGuesser=players.get(players.size()-1);
+				sendToDrawers("14"+currGuesser);
+				currGuess=0;
+				System.out.println("11");
+			}
+			currGuess++;
 		}
 	}
-	
+
+	public void getCurrentDrawer(){
+		String currentDrawer="09"+players.get(drawerTurn);
+		sendToDrawers(currentDrawer);
+		logToServer(currentDrawer+" "+players.toString());
+		drawerTurn++;
+	}
 	public void checkGameStart(){
 		int readyPlayers=0;
 		for(int i=0;i<clientList.size();i++){
@@ -124,25 +156,53 @@ public class Server extends JFrame implements Runnable{
 		}
 		if(readyPlayers==clientList.size()){
 			if(readyPlayers>3){
-				sendToClients("01\nGame is about to start. First guesser is "+clientList.get(0).getName());
-				sendToClients("06"+clientList.size());
+				sendToDrawers("06"+clientList.size());
+				sendToDrawers("03Clear");
+				shufflePlayers();
+				shuffleWords();
+				guesserCount=players.size();
+				getGuesser();
 			}else{
-				sendToClients("01\nAll players are ready but the game needs atleast 4 players to start.");
+				sendToDrawers("01\nAll players are ready but the game needs atleast 4 players to start.");
 			}
 		}else{
-			sendToClients("01\nWaiting for all players to ready up. Current: "+readyPlayers);
+			sendToDrawers("01\nWaiting for all players to ready up. Current: "+readyPlayers);
 		}
 	}
+
+	public void getGuesser(){
+			sendToDrawers("03ClearBoard");
+			sendToDrawers("07"+players.get(0));
+			logToServer(players.get(0));
+			System.out.println(players.get(0));
+			String drawers="08";
+			for(int i=1;i<players.size();i++){
+				drawers=drawers+players.get(i)+"\t";
+			}
+			sendToDrawers(drawers);
+			sendToDrawers("13"+words.get(0));
+			Collections.rotate(words, -1);
+			Collections.rotate(players, -1);
+			logToServer("getGuesser"+players.toString());
+			guesserCount=0;
+	}
+	public void shufflePlayers(){
+		for(int i=0;i<clientList.size();i++){
+			players.add(clientList.get(i).getName());
+		}
+		Collections.shuffle(players);
+	}
+	
 	
 	/*Iterating through client list to pass message to all clients*/
-	public void sendToClients(String message){
+	public void sendToDrawers(String message){
 		//If user is painting, he/she will not receive the coordinates for his/her painting
 		if(message.startsWith("02")){ 
 			String[] canvasInfo=message.split(",");
 			int userID=Integer.parseInt(canvasInfo[4].trim());
 			for(int i=0;i<clientList.size();i++){
 				ClientStorage client = clientList.get(i);
-				if(userID!=client.getID()){
+				if(userID!=client.getID()||client.drawer){
 					message=message.trim();
 					sendMessage(message.getBytes(),client.address,client.port);
 				}
@@ -150,8 +210,10 @@ public class Server extends JFrame implements Runnable{
 		}else{
 			for(int i=0;i<clientList.size();i++){
 				ClientStorage client = clientList.get(i);
-				message=message.trim();
-				sendMessage(message.getBytes(),client.address,client.port);
+				if(client.drawer){
+					message=message.trim();
+					sendMessage(message.getBytes(),client.address,client.port);
+				}
 			}
 		}
 	}
@@ -171,6 +233,16 @@ public class Server extends JFrame implements Runnable{
 		}catch(IOException e){
 			e.printStackTrace();
 		}	
+	}
+
+	
+	public void shuffleWords(){
+		System.out.println(clientList.size());
+		for(int i=0;i<clientList.size();i++){
+			words.add(clientList.get(i).getWord());
+		}
+		Collections.shuffle(words);
+		logToServer(words.toString());
 	}
 	
 	public void showWindow(){
@@ -212,7 +284,7 @@ public class Server extends JFrame implements Runnable{
 	
 	public void serverCommands(String command){
 		if(command.startsWith("/all")){
-			sendToClients("01"+"Server says:"+command.substring(4));
+			sendToDrawers("01"+"Server says:"+command.substring(4));
 			logToServer("Server says:"+command.substring(4));
 			commandLine.setText("");
 		}else if(command.equals("/listplayers")){

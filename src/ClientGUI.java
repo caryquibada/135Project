@@ -41,13 +41,14 @@ public class ClientGUI extends JFrame implements Runnable{
 	private Thread constantReceive;
 	private Thread run;
 	private boolean clientRunning=false;
-	private int ID=0,seconds;
+	private int ID=0,seconds,defSeconds;
 	private int currXsend,currYsend,currXreceive,currYreceive;
     private Canvas mainCanvas;
-    private List<Point> xs = new ArrayList<Point>();
-    private List<Point> ys = new ArrayList<Point>();
-    private int index=0;
+    private int turns=0,numberOfReadyPlayers;
     private JTextField timerWindow;
+    private JTextField DrawerTurn;
+    private JTextField wordField;
+    private String guesser;
 	public ClientGUI(String name,String IPAddress, int port,String word){
 		addWindowListener(new WindowAdapter() {
 			@Override
@@ -58,10 +59,10 @@ public class ClientGUI extends JFrame implements Runnable{
 		});
 		showWindow();
 		client = new Client(name,IPAddress,port,word);
-		client.setMyTurn();
+		client.drawTurn=true;
 		boolean connected=client.connect(IPAddress,port);
 		System.out.println("Name: "+name+" IP: "+IPAddress+" Port: "+port);
-		String connectPacket = "00"+name;
+		String connectPacket = "00"+name+","+word;
 		client.sendMessage(connectPacket.getBytes());
 		clientRunning = true;
 		run = new Thread(this,"Client Thread");
@@ -111,7 +112,6 @@ public class ClientGUI extends JFrame implements Runnable{
 	public void parseMessage(String message){
 		if(message.startsWith("00")){ //Login
 			client.setID(Integer.parseInt(message.substring(3,message.length()).trim()));
-			
 			sendPacket(client.getName()+" has connected");
 		}else if(message.startsWith("01")){ //Chat
 			String[] chatMessage=message.split(":");
@@ -137,10 +137,101 @@ public class ClientGUI extends JFrame implements Runnable{
 			Graphics g = mainCanvas.getGraphics();
 			g.setColor(Color.WHITE);
 			g.fillRect(0, 0, getWidth(), getHeight());
-		}else if(message.startsWith("06")){ //Count down 
-			int numberOfReadyPlayers=Integer.parseInt(message.substring(2).trim());
-			setSeconds(numberOfReadyPlayers);
+		}else if(message.startsWith("06")){ //Count down for game start
+			numberOfReadyPlayers=Integer.parseInt(message.substring(2).trim());
+			if(numberOfReadyPlayers==4){
+				seconds=5*4*4;
+				defSeconds=5;
+			}else if(numberOfReadyPlayers==5){
+				seconds=4*5*5;
+				defSeconds=4;
+			}else if(numberOfReadyPlayers>5){
+				defSeconds=3;
+				seconds=3*numberOfReadyPlayers*numberOfReadyPlayers;
+			}
 			countDown();
+		}else if(message.startsWith("07")){ //Guesser preparation
+			guesser=message.substring(2).trim();
+			if(guesser.equals(client.getName())){
+				mainCanvas.setVisible(false);
+				client.drawer=false;
+			}else{
+				mainCanvas.setVisible(true);
+				client.drawer=true;
+			}
+		}else if(message.startsWith("08")){
+			String[] drawers= message.trim().split("\t");
+			for(int i=0;i<drawers.length;i++){
+				if(drawers[i].equals(client.getName())){
+					client.drawer=true;
+					mainCanvas.setVisible(true);
+				}
+			}
+		}else if(message.startsWith("09")){
+			String player=message.substring(2).trim();
+			if(player.equals(client.getName())){
+				client.drawTurn=true;
+				DrawerTurn.setText("Your turn");
+			}else{
+				client.drawTurn=false;
+				DrawerTurn.setText(player+"'s turn");
+			}
+		}else if(message.startsWith("13")){
+			if(client.drawer){
+				String currentWord=message.substring(2).trim();
+				wordField.setText("\tDraw: "+currentWord);
+			}else{
+				String currentWord=message.substring(2).trim();
+				String guesserWord="\t";
+				for(int i=0;i<currentWord.length();i++){
+					guesserWord=guesserWord+" _";
+				}
+				wordField.setText(guesserWord);
+			}
+		}else if(message.startsWith("14")){
+			if(message.substring(2).trim().equals(client.getName())){
+				mainCanvas.setVisible(true);
+			}
+		}
+	}
+	
+	//Countdown Timer
+		public void countDown(){
+			Timer timer = new Timer();
+			timer.schedule(new TimerTask(){
+				int turns=numberOfReadyPlayers-1;
+				int drawTurns=1;
+				public void run(){
+					int drawTime=(seconds-(numberOfReadyPlayers*defSeconds*turns))%defSeconds;
+					timerWindow.setText(drawTime+"");
+					if(drawTime==0 && drawTurns<numberOfReadyPlayers && drawTurns!=1){
+						client.sendMessage("10Draw".getBytes()); //Draw Turn
+						System.out.println("between");
+						drawTurns++;
+					}else if(drawTime==0 && drawTurns==1){
+						client.sendMessage("10Draw".getBytes());
+						client.sendMessage("12ChangeGuessingTurn".getBytes());
+						System.out.println("1");
+						drawTurns++;
+					}else if(drawTime==0&& drawTurns==numberOfReadyPlayers){
+						client.sendMessage("11ChangeGuessTurn".getBytes());
+						System.out.println("end");
+						drawTurns=1;
+						turns--;
+					}
+					seconds--;
+					if(seconds==0){
+						timer.cancel();
+					}
+				}
+			},0,1000);
+		}
+	
+	public void isCurrentDrawer(String nameMessage){
+		if(client.getName().equals(nameMessage)){
+			client.myTurn=true;
+		}else{
+			client.myTurn=false;
 		}
 	}
 	
@@ -160,7 +251,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		//ChatHistory Text Area
 		ChatHistory = new JTextArea();
 		ChatHistory.setLineWrap(true);
-		ChatHistory.setFont(new Font("Arial", Font.PLAIN, 14));
+		ChatHistory.setFont(new Font("Dialog", Font.PLAIN, 11));
 		ChatHistory.setEditable(false);
 		DefaultCaret caret = (DefaultCaret)ChatHistory.getCaret();
 		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
@@ -200,7 +291,7 @@ public class ClientGUI extends JFrame implements Runnable{
 			}
 		});
 		
-		ClearButton.setBounds(21, 13, 89, 23);
+		ClearButton.setBounds(10, 11, 89, 23);
 		contentPane.add(ClearButton);
 		
 		timerWindow = new JTextField();
@@ -217,49 +308,64 @@ public class ClientGUI extends JFrame implements Runnable{
 		changeTurn.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent arg0) {
-				client.setMyTurn();
+				client.changeTurn();
 			}
 		});
-		changeTurn.setBounds(119, 13, 89, 23);
+		changeTurn.setBounds(10, 40, 89, 23);
 		contentPane.add(changeTurn);
+		
+		DrawerTurn = new JTextField();
+		DrawerTurn.setHorizontalAlignment(SwingConstants.LEFT);
+		DrawerTurn.setBackground(new Color(255, 255, 255));
+		DrawerTurn.setEditable(false);
+		DrawerTurn.setFont(new Font("Segoe UI Semibold", Font.PLAIN, 12));
+		DrawerTurn.setBounds(502, 12, 164, 46);
+		contentPane.add(DrawerTurn);
+		DrawerTurn.setColumns(10);
+		
+		wordField = new JTextField();
+		wordField.setEditable(false);
+		wordField.setBackground(new Color(255, 255, 255));
+		wordField.setBounds(125, 12, 362, 46);
+		contentPane.add(wordField);
+		wordField.setColumns(10);
 		mainCanvas.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
-				currXsend=e.getX();
-				currYsend=e.getY();
+				setCurrXY(e.getX(),e.getY());
 			}
 		});
 		mainCanvas.addMouseMotionListener(new MouseMotionAdapter() {
 			@Override
 			public void mouseDragged(MouseEvent e) {
-				if(client.getMyTurn()){
-					Graphics g = mainCanvas.getGraphics();
-					int oldXsend=currXsend;
-					int oldYsend=currYsend;
-					currXsend=e.getX();
-					currYsend=e.getY();
-					g.drawLine(oldXsend, oldYsend, currXsend, currYsend);
-					String xAndy = "02"+oldXsend+","+oldYsend+","+e.getX()+","+e.getY()+","+client.getID();
-					sendXY(xAndy);
+				if(client.drawTurn){
+					draw(e.getX(),e.getY());
 				}
 			}
 		});
 		
 	}
-	public void countDown(){
-		Timer timer = new Timer();
-		timer.schedule(new TimerTask(){
-			public void run(){
-				seconds--;
-				timerWindow.setText(seconds+"");
-				if(seconds==0){
-					client.setMyTurn();
-					timer.cancel();
-				}
-			}
-		},0,1000);
+	
+	//Setting initial x and y
+	public void setCurrXY(int x, int y){
+		currXsend=x;
+		currYsend=y;
 	}
 	
+	//Canvas drawing and sending draw packet
+	public void draw(int x, int y){
+		Graphics g = mainCanvas.getGraphics();
+		int oldXsend=currXsend;
+		int oldYsend=currYsend;
+		currXsend=x;
+		currYsend=y;
+		g.drawLine(oldXsend, oldYsend, currXsend, currYsend);
+		String xAndy = "02"+oldXsend+","+oldYsend+","+x+","+y+","+client.getID();
+		sendXY(xAndy);
+	}
+	
+	
+	//Timer seconds
 	public void setSeconds(int seconds){
 		this.seconds=seconds;
 	}
