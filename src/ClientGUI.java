@@ -90,11 +90,7 @@ public class ClientGUI extends JFrame implements Runnable{
 	}
 	
 	//Constant receiving of message from the server and parsing the message.
-	//Different prefixes are assigned to different server responses
-	//00 for login that sets the ID of the client
-	//01 for chat message and it appends to the text area
-	//02 for drawings being received and adding the information to the canvas
-	//03 for clearing the canvas when the button for clearing the board is cleared
+	
 	public void constantReceive(){
 		System.out.println(clientRunning);
 		constantReceive = new Thread("constantReceive"){
@@ -108,7 +104,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		};
 		constantReceive.start();
 	}
-	
+	//Different prefixes are assigned to different server responses
 	public void parseMessage(String message){
 		if(message.startsWith("00")){ //Login
 			client.setID(Integer.parseInt(message.substring(3,message.length()).trim()));
@@ -159,7 +155,7 @@ public class ClientGUI extends JFrame implements Runnable{
 				mainCanvas.setVisible(true);
 				client.drawer=true;
 			}
-		}else if(message.startsWith("08")){
+		}else if(message.startsWith("08")){ //Drawer preparation
 			String[] drawers= message.trim().split("\t");
 			for(int i=0;i<drawers.length;i++){
 				if(drawers[i].equals(client.getName())){
@@ -167,7 +163,7 @@ public class ClientGUI extends JFrame implements Runnable{
 					mainCanvas.setVisible(true);
 				}
 			}
-		}else if(message.startsWith("09")){
+		}else if(message.startsWith("09")){ //Turn packet
 			String player=message.substring(2).trim();
 			if(player.equals(client.getName())){
 				client.drawTurn=true;
@@ -176,7 +172,7 @@ public class ClientGUI extends JFrame implements Runnable{
 				client.drawTurn=false;
 				DrawerTurn.setText(player+"'s turn");
 			}
-		}else if(message.startsWith("13")){
+		}else if(message.startsWith("13")){ //What to draw packet/guess packet
 			if(client.drawer){
 				String currentWord=message.substring(2).trim();
 				wordField.setText("\tDraw: "+currentWord);
@@ -188,10 +184,11 @@ public class ClientGUI extends JFrame implements Runnable{
 				}
 				wordField.setText(guesserWord);
 			}
-		}else if(message.startsWith("14")){
+		}else if(message.startsWith("14")){ //Guess turn packet
 			if(message.substring(2).trim().equals(client.getName())){
 				mainCanvas.setVisible(true);
 			}
+			DrawerTurn.setText(message.substring(2).trim()+" is guessing");
 		}
 	}
 	

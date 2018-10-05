@@ -104,7 +104,7 @@ public class Server extends JFrame implements Runnable{
 			disconnectClient(message);
 			sendToDrawers("01"+message.substring(2).trim()+" has disconnected!");
 			logToServer(message.substring(2).trim()+" has disconnected!");
-		}else if(message.startsWith("05")){
+		}else if(message.startsWith("05")){ //Getting number of players that are ready
 			String nameReady=message.substring(2).trim();
 			sendToDrawers("01"+nameReady+" is ready");
 			for(int i=0;i<clientList.size();i++){
@@ -113,25 +113,18 @@ public class Server extends JFrame implements Runnable{
 				}
 			}
 			checkGameStart();
-		}else if(message.startsWith("10")){
+		}else if(message.startsWith("10")){ //Changing the current drawer 
 			if(drawerCount==players.size()){
 				if(drawerTurn<players.size()-1){
 					getCurrentDrawer();
 				}else if(drawerTurn==players.size()-1){
 					getCurrentDrawer();
-					drawerTurn=1;
+					drawerTurn=0;
 				}
 				drawerCount=0;
 			}
 			drawerCount++;
-		}else if(message.startsWith("12")){
-			if(guessThreshold==players.size()){
-				getGuesser();
-				guessThreshold=0;
-				System.out.println("12");
-			}
-			guessThreshold++;
-		}else if(message.startsWith("11")){
+		}else if(message.startsWith("11")){ //Guess turn packet
 			if(currGuess==players.size()){
 				String currGuesser=players.get(players.size()-1);
 				sendToDrawers("14"+currGuesser);
@@ -139,13 +132,20 @@ public class Server extends JFrame implements Runnable{
 				System.out.println("11");
 			}
 			currGuess++;
+		}else if(message.startsWith("12")){ //Changing the guesser 
+			if(guessThreshold==players.size()){
+				getGuesser();
+				guessThreshold=0;
+				System.out.println("12");
+			}
+			guessThreshold++;
 		}
 	}
 
 	public void getCurrentDrawer(){
 		String currentDrawer="09"+players.get(drawerTurn);
 		sendToDrawers(currentDrawer);
-		logToServer(currentDrawer+" "+players.toString());
+		logToServer("drawerTurn: "+drawerTurn+" Current drawer: "+players.get(drawerTurn)+" "+players.toString());
 		drawerTurn++;
 	}
 	public void checkGameStart(){
@@ -174,7 +174,7 @@ public class Server extends JFrame implements Runnable{
 			sendToDrawers("03ClearBoard");
 			sendToDrawers("07"+players.get(0));
 			logToServer(players.get(0));
-			System.out.println(players.get(0));
+			System.out.println("Current guesser: "+players.get(0));
 			String drawers="08";
 			for(int i=1;i<players.size();i++){
 				drawers=drawers+players.get(i)+"\t";
@@ -237,7 +237,6 @@ public class Server extends JFrame implements Runnable{
 
 	
 	public void shuffleWords(){
-		System.out.println(clientList.size());
 		for(int i=0;i<clientList.size();i++){
 			words.add(clientList.get(i).getWord());
 		}
