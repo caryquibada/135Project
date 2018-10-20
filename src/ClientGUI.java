@@ -2,7 +2,7 @@
  * Youtube Channel: https://www.youtube.com/user/TheChernoProject
  * Github Repo: https://github.com/TheCherno/ChernoChat/tree/master/src/com/thecherno/chernochat 
  * Github,Youtube. (2014). Cherno Chat. [online] Available at: https://github.com/TheCherno/ChernoChat/tree/master/src/com/thecherno/chernochat, https://www.youtube.com/user/TheChernoProject [Accessed 24 Sep. 2018].*/
-import java.util.Random;
+
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Component;
@@ -40,7 +40,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
-import java.nio.Buffer;
 
 import javax.swing.SwingConstants;
 import javax.swing.JTextPane;
@@ -68,8 +67,7 @@ public class ClientGUI extends JFrame implements Runnable{
     private List<Point> points = new ArrayList<Point>();
     private List<Point> oldPoints = new ArrayList<Point>();
 	public ClientGUI(String name,String IPAddress, int port,String word){
-		
-		setTitle("Quick Draw (Sketch Window) - "+name+" 's client");
+		setTitle(name);
 		setBackground(new Color(255, 255, 255));
 		addWindowListener(new WindowAdapter() {
 			@Override
@@ -304,13 +302,8 @@ public class ClientGUI extends JFrame implements Runnable{
 	//GUI stuff(ignore)
 	public void showWindow() {
 		setVisible(true);
-		
-		
-
-		Random rand = new Random();
-
-	
-		
+		//setTitle("Sketch Window");
+		setResizable(false);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 900, 600);
 		contentPane = new JPanel();
@@ -321,9 +314,9 @@ public class ClientGUI extends JFrame implements Runnable{
 		
 		//ChatHistory Text Area
 		ChatHistory = new JTextArea();
-		ChatHistory.setEditable(false);
 		ChatHistory.setLineWrap(true);
 		ChatHistory.setFont(new Font("Dialog", Font.PLAIN, 11));
+		ChatHistory.setEditable(false);
 		DefaultCaret caret = (DefaultCaret)ChatHistory.getCaret();
 		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 		
@@ -414,7 +407,6 @@ public class ClientGUI extends JFrame implements Runnable{
 		DrawerTurn.setColumns(10);
 		
 		wordField = new JTextField();
-		wordField.setHorizontalAlignment(SwingConstants.LEFT);
 		wordField.setFont(new Font("Verdana", Font.PLAIN, 26));
 		wordField.setEditable(false);
 		wordField.setBackground(new Color(255, 255, 255));
