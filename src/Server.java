@@ -41,7 +41,7 @@ public class Server extends JFrame implements Runnable{
 	private JTextField commandLine;
 	Thread clients;
 	private JScrollPane scrollPane;
-	public int drawerTurn=1,guesserCount=1,currGuess=1,drawerCount=1,guessThreshold=1;
+	public int drawerTurn=0,guesserCount=1,currGuess=1,drawerCount=1,guessThreshold=1;
 
 	public Server(int port) throws UnknownHostException{
 		setResizable(false); //Constructor for opening the Datagram Socket on port given by the server creator.

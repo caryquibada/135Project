@@ -5,12 +5,14 @@
 
 import java.awt.Canvas;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Shape;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import javax.swing.JFrame;
+import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -31,6 +33,7 @@ import java.awt.Font;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import javax.swing.SwingConstants;
+import javax.swing.JTextPane;
 
 public class ClientGUI extends JFrame implements Runnable{
 
@@ -43,13 +46,17 @@ public class ClientGUI extends JFrame implements Runnable{
 	private boolean clientRunning=false;
 	private int ID=0,seconds,defSeconds;
 	private int currXsend,currYsend,currXreceive,currYreceive;
-    private Canvas mainCanvas;
+    private JPanel mainCanvas,coverPanel;
     private int turns=0,numberOfReadyPlayers;
     private JTextField timerWindow;
     private JTextField DrawerTurn;
     private JTextField wordField;
     private String guesser;
+    private JLayeredPane panel;
+    private List<Point> points = new ArrayList<Point>();
+    private List<Point> oldPoints = new ArrayList<Point>();
 	public ClientGUI(String name,String IPAddress, int port,String word){
+		setBackground(new Color(255, 255, 255));
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent arg0) {
@@ -123,12 +130,16 @@ public class ClientGUI extends JFrame implements Runnable{
 			}
 		}else if(message.startsWith("02")){ //Drawing
 			String[] xy=message.substring(2).split(",");
+			
 			int oldx=Integer.parseInt(xy[0]);
 			int oldy=Integer.parseInt(xy[1]);
 			int x = Integer.parseInt(xy[2]);
 			int y = Integer.parseInt(xy[3].trim());
-			Graphics g = mainCanvas.getGraphics();
-			g.drawLine(oldx, oldy, x, y);
+			Point oldP = new Point(oldx,oldy);
+			Point p=new Point(x,y);
+			oldPoints.add(oldP);
+			points.add(p);
+			repaint();
 		}else if(message.startsWith("03")){ //Clear Board
 			Graphics g = mainCanvas.getGraphics();
 			g.setColor(Color.WHITE);
@@ -136,23 +147,21 @@ public class ClientGUI extends JFrame implements Runnable{
 		}else if(message.startsWith("06")){ //Count down for game start
 			numberOfReadyPlayers=Integer.parseInt(message.substring(2).trim());
 			if(numberOfReadyPlayers==4){
-				seconds=5*4*4;
+				seconds=5*4;
 				defSeconds=5;
 			}else if(numberOfReadyPlayers==5){
-				seconds=4*5*5;
+				seconds=4*5;
 				defSeconds=4;
 			}else if(numberOfReadyPlayers>5){
+				seconds=3*numberOfReadyPlayers;
 				defSeconds=3;
-				seconds=3*numberOfReadyPlayers*numberOfReadyPlayers;
 			}
 			countDown();
 		}else if(message.startsWith("07")){ //Guesser preparation
 			guesser=message.substring(2).trim();
 			if(guesser.equals(client.getName())){
-				mainCanvas.setVisible(false);
 				client.drawer=false;
 			}else{
-				mainCanvas.setVisible(true);
 				client.drawer=true;
 			}
 		}else if(message.startsWith("08")){ //Drawer preparation
@@ -160,7 +169,6 @@ public class ClientGUI extends JFrame implements Runnable{
 			for(int i=0;i<drawers.length;i++){
 				if(drawers[i].equals(client.getName())){
 					client.drawer=true;
-					mainCanvas.setVisible(true);
 				}
 			}
 		}else if(message.startsWith("09")){ //Turn packet
@@ -186,7 +194,8 @@ public class ClientGUI extends JFrame implements Runnable{
 			}
 		}else if(message.startsWith("14")){ //Guess turn packet
 			if(message.substring(2).trim().equals(client.getName())){
-				mainCanvas.setVisible(true);
+				client.drawer=true;
+				repaint();
 			}
 			DrawerTurn.setText(message.substring(2).trim()+" is guessing");
 		}
@@ -194,25 +203,21 @@ public class ClientGUI extends JFrame implements Runnable{
 	
 	//Countdown Timer
 		public void countDown(){
+			client.sendMessage("10Draw".getBytes()); //Draw Turn
 			Timer timer = new Timer();
 			timer.schedule(new TimerTask(){
 				int turns=numberOfReadyPlayers-1;
 				int drawTurns=1;
+				
 				public void run(){
-					int drawTime=(seconds-(numberOfReadyPlayers*defSeconds*turns))%defSeconds;
+					int drawTime=seconds-((numberOfReadyPlayers+1)*turns);
 					timerWindow.setText(drawTime+"");
-					if(drawTime==0 && drawTurns<numberOfReadyPlayers && drawTurns!=1){
+					if(drawTime==0 && drawTurns<numberOfReadyPlayers-1){
 						client.sendMessage("10Draw".getBytes()); //Draw Turn
-						System.out.println("between");
 						drawTurns++;
-					}else if(drawTime==0 && drawTurns==1){
-						client.sendMessage("10Draw".getBytes());
-						client.sendMessage("12ChangeGuessingTurn".getBytes());
-						System.out.println("1");
-						drawTurns++;
-					}else if(drawTime==0&& drawTurns==numberOfReadyPlayers){
+						turns--;
+					}else if(drawTime==0&& drawTurns==numberOfReadyPlayers-1){
 						client.sendMessage("11ChangeGuessTurn".getBytes());
-						System.out.println("end");
 						drawTurns=1;
 						turns--;
 					}
@@ -240,7 +245,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 900, 600);
 		contentPane = new JPanel();
-		contentPane.setBackground(new Color(245, 255, 250));
+		contentPane.setBackground(new Color(224, 255, 255));
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
@@ -273,10 +278,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		contentPane.add(ChatBox);
 		ChatBox.setColumns(10);
 		
-		mainCanvas = new Canvas();
-		mainCanvas.setBackground(Color.WHITE);
-		mainCanvas.setBounds(10, 69, 693, 491);
-		contentPane.add(mainCanvas);
+		
 		
 		JButton ClearButton = new JButton("Clear Board");
 		ClearButton.setBackground(new Color(255, 255, 255));
@@ -285,6 +287,29 @@ public class ClientGUI extends JFrame implements Runnable{
 			public void mouseReleased(MouseEvent arg0) {
 				String clear="03Clear";
 				client.sendMessage(clear.getBytes());
+			}
+		});
+		
+
+		mainCanvas = new JPanel();
+		mainCanvas.setBackground(Color.WHITE);
+		mainCanvas.setBounds(20, 70, 690, 490);
+		contentPane.add(mainCanvas);
+		mainCanvas.setLayout(null);
+		
+		mainCanvas.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				setCurrXY(e.getX(),e.getY());
+			}
+		});
+		mainCanvas.addMouseMotionListener(new MouseMotionAdapter() {
+			@Override
+			public void mouseDragged(MouseEvent e) {
+				System.out.println(e.getX()+" "+e.getY());
+				if(client.drawTurn&&e.getX()>0&&e.getY()>0&&e.getX()<mainCanvas.getWidth()&&e.getY()<mainCanvas.getHeight()){
+					draw(e.getX(),e.getY());
+				}
 			}
 		});
 		
@@ -326,20 +351,6 @@ public class ClientGUI extends JFrame implements Runnable{
 		wordField.setBounds(125, 12, 362, 46);
 		contentPane.add(wordField);
 		wordField.setColumns(10);
-		mainCanvas.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mousePressed(MouseEvent e) {
-				setCurrXY(e.getX(),e.getY());
-			}
-		});
-		mainCanvas.addMouseMotionListener(new MouseMotionAdapter() {
-			@Override
-			public void mouseDragged(MouseEvent e) {
-				if(client.drawTurn){
-					draw(e.getX(),e.getY());
-				}
-			}
-		});
 		
 	}
 	
@@ -351,16 +362,38 @@ public class ClientGUI extends JFrame implements Runnable{
 	
 	//Canvas drawing and sending draw packet
 	public void draw(int x, int y){
-		Graphics g = mainCanvas.getGraphics();
 		int oldXsend=currXsend;
 		int oldYsend=currYsend;
 		currXsend=x;
 		currYsend=y;
-		g.drawLine(oldXsend, oldYsend, currXsend, currYsend);
+		Point oldP = new Point(oldXsend,oldYsend);
+		Point p=new Point(x,y);
+		oldPoints.add(oldP);
+		points.add(p);
+		repaint();
 		String xAndy = "02"+oldXsend+","+oldYsend+","+x+","+y+","+client.getID();
 		sendXY(xAndy);
 	}
 	
+	public void paint(Graphics g){
+		if(client.drawer){
+			g.setColor(Color.BLACK);
+			int i = 0;
+			System.out.println(points.size());
+		    while (i < points.size()-1) {
+		      Point p0 = (Point) (oldPoints.get(i++));
+		      Point p1 = (Point) (points.get(i++));
+		      int oldx = p0.x;
+		      int oldy = p0.y;
+		      int x = p1.x;
+		      int y = p1.y;
+		      g.drawLine(oldx+20, oldy+100, x+20, y+100);
+		    }
+		}else{
+			g.setColor(Color.WHITE);
+			g.fillRect(20, 100, mainCanvas.getWidth(), mainCanvas.getHeight());
+		}
+	}
 	
 	//Timer seconds
 	public void setSeconds(int seconds){
