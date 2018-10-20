@@ -82,69 +82,112 @@ public class Server extends JFrame implements Runnable{
 	/*Parsing the packet being received*/
 	public void parsePacket(DatagramPacket packet){
 		String message = new String(packet.getData());
-		if(message.startsWith("00")){ //00 For login
-			int id = new SecureRandom().nextInt();
-			message=message.trim();
-			message=message.substring(2);
-			String[] messageArray=message.split(",");
-			clientList.add(new ClientStorage(messageArray[0],packet.getAddress(),packet.getPort(),id,messageArray[1]));
-			String ID = "00"+id;
-			sendMessage(ID.getBytes(), packet.getAddress(), packet.getPort());
-			logToServer("Client connected with IP: "+packet.getAddress());//Printing connecting client IP
-		}else if(message.startsWith("01")){//01 For message;
-			sendToDrawers(message);
-			logToServer(message.substring(2).trim());
-		}else if(message.startsWith("02")){//02 For Canvas Drawing
-			sendToDrawers(message);
-			//logToServer(message.substring(2).trim());
-		}else if(message.startsWith("03")){//03 For Clearing the Board
-			sendToDrawers(message);
-			logToServer("Board cleared!");
-		}else if(message.startsWith("04")){//04 For Disconnection
-			disconnectClient(message);
-			sendToDrawers("01"+message.substring(2).trim()+" has disconnected!");
-			logToServer(message.substring(2).trim()+" has disconnected!");
-		}else if(message.startsWith("05")){ //Getting number of players that are ready
-			String nameReady=message.substring(2).trim();
-			sendToDrawers("01"+nameReady+" is ready");
-			for(int i=0;i<clientList.size();i++){
-				if(clientList.get(i).getName().trim().equals(nameReady)){
-					clientList.get(i).ready="true";
+		String condition = message.substring(0,2);
+		switch(condition) {
+			case	"00":
+				int id = new SecureRandom().nextInt();
+				message=message.trim();
+				message=message.substring(2);
+				String[] messageArray=message.split(",");
+				clientList.add(new ClientStorage(messageArray[0],packet.getAddress(),packet.getPort(),id,messageArray[1]));
+				String ID = "00"+id;
+				sendMessage(ID.getBytes(), packet.getAddress(), packet.getPort());
+				logToServer("Client connected with IP: "+packet.getAddress());//Printing connecting client IP
+				break;
+			case	"01":
+				sendToDrawers(message);
+				logToServer(message.substring(2).trim());
+				break;
+			case	"02":
+				sendToDrawers(message);
+				//logToServer(message.substring(2).trim());
+				break;
+			case	"03":
+				sendToDrawers(message);
+				logToServer("Board cleared!");
+				break;
+			case	"04":
+				disconnectClient(message);
+				sendToDrawers("01"+message.substring(2).trim()+" has disconnected!");
+				String name=message.substring(2).trim();
+				for(int i=0;i<clientList.size();i++){
+					if(clientList.get(i).getName().trim().equals(name)&&clientList.get(i).ready.equals("true")){
+						sendToDrawers("01"+clientList.get(i).getName().trim()+" undid their ready!");
+						clientList.get(i).ready="false";
+					}
 				}
-			}
-			checkGameStart();
-		}else if(message.startsWith("10")){ //Changing the current drawer 
-			if(drawerCount==players.size()){
-				if(drawerTurn<players.size()-1){
-					getCurrentDrawer();
-				}else if(drawerTurn==players.size()-1){
-					getCurrentDrawer();
-					drawerTurn=0;
+				logToServer(message.substring(2).trim()+" has disconnected!");
+				break;
+			case	"05":
+				String nameReady=message.substring(2).trim();
+				
+				for(int i=0;i<clientList.size();i++){
+					if(clientList.get(i).getName().trim().equals(nameReady)){
+						if(clientList.get(i).ready.equals("false")) {
+							sendToDrawers("01"+nameReady+" is ready!");
+							clientList.get(i).ready="true";
+						}else {
+							sendToDrawers("01"+nameReady+" undid his/her ready!");
+							clientList.get(i).ready="false";
+						}
+						
+					}
 				}
-				drawerCount=0;
-			}
-			drawerCount++;
-		}else if(message.startsWith("11")){ //Guess turn packet
-			if(currGuess==players.size()){
-				String currGuesser=players.get(players.size()-1);
-				sendToDrawers("14"+currGuesser);
-				currGuess=0;
-				System.out.println("11");
-			}
-			currGuess++;
-		}else if(message.startsWith("12")){ //Changing the guesser 
-			if(guessThreshold==players.size()){
-				getGuesser();
-				guessThreshold=0;
-				System.out.println("12");
-			}
-			guessThreshold++;
+				checkGameStart();
+				break;
+			case	"10":
+				if(drawerCount==players.size()){
+					if(drawerTurn<players.size()-1){
+						getCurrentDrawer();
+					}else if(drawerTurn==players.size()-1){
+						getCurrentDrawer();
+						drawerTurn=0;
+					}
+					drawerCount=0;
+				}
+				drawerCount++;
+				break;
+			case	"11":
+				if(currGuess==players.size()){
+					String currGuesser=players.get(players.size()-1);
+					sendToDrawers("14"+currGuesser);
+					currGuess=0;
+					System.out.println("11");
+				}
+				currGuess++;
+				break;
+			case	"12":
+				if(guessThreshold==players.size()){
+					getGuesser();
+					guessThreshold=0;
+					System.out.println("12");
+				}
+				guessThreshold++;
+				break;
+			case	"15":
+				sendToDrawers("15Win");
+				break;
+			case	"16":
+				for(int i=0;i<clientList.size();i++) {
+					clientList.get(i).ready="false";
+				}
+				break;
+			default: 
+				break;
 		}
 	}
 
 	public void getCurrentDrawer(){
 		String currentDrawer="09"+players.get(drawerTurn);
 		sendToDrawers(currentDrawer);
+		if(drawerTurn<players.size()-2) {
+			String nextDrawer="01"+players.get(drawerTurn+1)+" is the next drawer! Be ready!";
+			sendToDrawers(nextDrawer);
+		}else {
+			String nextDrawer="01"+players.get(drawerTurn+1)+" is guessing after! Be ready!";
+			sendToDrawers(nextDrawer);
+		}
+		
 		logToServer("drawerTurn: "+drawerTurn+" Current drawer: "+players.get(drawerTurn)+" "+players.toString());
 		drawerTurn++;
 	}

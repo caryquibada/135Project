@@ -5,10 +5,14 @@
 
 import java.awt.Canvas;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Image;
 import java.awt.Point;
 import java.awt.Shape;
+import java.awt.Toolkit;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import javax.swing.JFrame;
@@ -27,13 +31,19 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.awt.event.MouseEvent;
+
+import javax.imageio.ImageIO;
 import javax.swing.JButton;
 import java.awt.event.MouseAdapter;
 import java.awt.Font;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.IOException;
+
 import javax.swing.SwingConstants;
 import javax.swing.JTextPane;
+import javax.swing.UIManager;
 
 public class ClientGUI extends JFrame implements Runnable{
 
@@ -43,16 +53,17 @@ public class ClientGUI extends JFrame implements Runnable{
 	private Client client;
 	private Thread constantReceive;
 	private Thread run;
-	private boolean clientRunning=false;
-	private int ID=0,seconds,defSeconds;
+	private boolean clientRunning=false,correct=false;
+	private int ID=0,seconds=0,defSeconds,drawTime=100,allSeconds;
 	private int currXsend,currYsend,currXreceive,currYreceive;
     private JPanel mainCanvas,coverPanel;
     private int turns=0,numberOfReadyPlayers;
     private JTextField timerWindow;
     private JTextField DrawerTurn;
     private JTextField wordField;
-    private String guesser;
+    private String guesser,currentWord="";
     private JLayeredPane panel;
+    private Image img;
     private List<Point> points = new ArrayList<Point>();
     private List<Point> oldPoints = new ArrayList<Point>();
 	public ClientGUI(String name,String IPAddress, int port,String word){
@@ -113,121 +124,163 @@ public class ClientGUI extends JFrame implements Runnable{
 	}
 	//Different prefixes are assigned to different server responses
 	public void parseMessage(String message){
-		if(message.startsWith("00")){ //Login
-			client.setID(Integer.parseInt(message.substring(3,message.length()).trim()));
-			sendPacket(client.getName()+" has connected");
-		}else if(message.startsWith("01")){ //Chat
-			String[] chatMessage=message.split(":");
-			if(chatMessage.length>1){
-				if(client.getName().equals(chatMessage[0].substring(2).trim())&&chatMessage[1].trim().equals("/ready")){
-					client.ready="true";
-					client.sendMessage(("05"+client.getName()).getBytes());
-				}else{
+		
+		String condition=message.substring(0, 2);
+		System.out.println(condition);
+		switch(condition) {
+			case	"00":
+				client.setID(Integer.parseInt(message.substring(3,message.length()).trim()));
+				sendPacket(client.getName()+" has connected");
+				break;
+			case	"01":
+				String[] chatMessage=message.split(":");
+				if(chatMessage.length>1){ 
+					System.out.println(client.drawer);
+					if(drawTime<=defSeconds&&client.myTurn&&seconds!=0){//When it's time to guess
+						String[] splitGuess=message.split(":");
+						if(splitGuess[1].trim().equals(currentWord)) {
+							printToChat("01Correct!");
+							String win="15Win";
+							client.sendMessage(win.getBytes());
+							seconds=1;
+						}else {
+							printToChat("01Incorrect! You only have seconds "+drawTime+" left!");
+						}
+					}else {
+						printToChat(message);
+					}
+				}else {
 					printToChat(message);
 				}
-			}else{
-				printToChat(message);
-			}
-		}else if(message.startsWith("02")){ //Drawing
-			String[] xy=message.substring(2).split(",");
-			
-			int oldx=Integer.parseInt(xy[0]);
-			int oldy=Integer.parseInt(xy[1]);
-			int x = Integer.parseInt(xy[2]);
-			int y = Integer.parseInt(xy[3].trim());
-			Point oldP = new Point(oldx,oldy);
-			Point p=new Point(x,y);
-			oldPoints.add(oldP);
-			points.add(p);
-			repaint();
-		}else if(message.startsWith("03")){ //Clear Board
-			Graphics g = mainCanvas.getGraphics();
-			g.setColor(Color.WHITE);
-			g.fillRect(0, 0, getWidth(), getHeight());
-		}else if(message.startsWith("06")){ //Count down for game start
-			numberOfReadyPlayers=Integer.parseInt(message.substring(2).trim());
-			if(numberOfReadyPlayers==4){
-				seconds=5*4;
-				defSeconds=5;
-			}else if(numberOfReadyPlayers==5){
-				seconds=4*5;
-				defSeconds=4;
-			}else if(numberOfReadyPlayers>5){
-				seconds=3*numberOfReadyPlayers;
-				defSeconds=3;
-			}
-			countDown();
-		}else if(message.startsWith("07")){ //Guesser preparation
-			guesser=message.substring(2).trim();
-			if(guesser.equals(client.getName())){
-				client.drawer=false;
-			}else{
-				client.drawer=true;
-			}
-		}else if(message.startsWith("08")){ //Drawer preparation
-			String[] drawers= message.trim().split("\t");
-			for(int i=0;i<drawers.length;i++){
-				if(drawers[i].equals(client.getName())){
+				break;
+			case	"02":
+				String[] xy=message.substring(2).split(",");
+				
+				int oldx=Integer.parseInt(xy[0]);
+				int oldy=Integer.parseInt(xy[1]);
+				int x = Integer.parseInt(xy[2]);
+				int y = Integer.parseInt(xy[3].trim());
+				Point oldP = new Point(oldx+20,oldy+100);
+				Point p=new Point(x+20,y+100);
+				oldPoints.add(oldP);
+				points.add(p);
+				repaint();
+				break;
+			case	"03":
+				clearCanvas();
+				break;
+			case	"06":
+				numberOfReadyPlayers=Integer.parseInt(message.substring(2).trim());
+				if(numberOfReadyPlayers==4){
+					seconds=5*4;
+					allSeconds=5*4;
+					defSeconds=5;
+				}else if(numberOfReadyPlayers==5){
+					seconds=4*5;
+					allSeconds=4*5;
+					defSeconds=4;
+				}else if(numberOfReadyPlayers>5){
+					seconds=3*numberOfReadyPlayers;
+					allSeconds=3*numberOfReadyPlayers;
+					defSeconds=3;
+				}
+				countDown();
+				break;
+			case	"07":
+				guesser=message.substring(2).trim();
+				System.out.println(guesser);
+				if(guesser.equals(client.getName())){
+					System.out.println("Guesser");
+					client.drawer=false;
+					client.myTurn=true;
+				}else{
+					client.myTurn=false;
 					client.drawer=true;
 				}
-			}
-		}else if(message.startsWith("09")){ //Turn packet
-			String player=message.substring(2).trim();
-			if(player.equals(client.getName())){
-				client.drawTurn=true;
-				DrawerTurn.setText("Your turn");
-			}else{
-				client.drawTurn=false;
-				DrawerTurn.setText(player+"'s turn");
-			}
-		}else if(message.startsWith("13")){ //What to draw packet/guess packet
-			if(client.drawer){
-				String currentWord=message.substring(2).trim();
-				wordField.setText("\tDraw: "+currentWord);
-			}else{
-				String currentWord=message.substring(2).trim();
-				String guesserWord="\t";
-				for(int i=0;i<currentWord.length();i++){
-					guesserWord=guesserWord+" _";
+				break;
+			case	"08":
+				String[] drawers= message.trim().split("\t");
+				for(int i=0;i<drawers.length;i++){
+					if(drawers[i].equals(client.getName())){
+						client.drawer=true;
+						client.myTurn=false;
+					}
 				}
-				wordField.setText(guesserWord);
-			}
-		}else if(message.startsWith("14")){ //Guess turn packet
-			if(message.substring(2).trim().equals(client.getName())){
-				client.drawer=true;
+				break;
+			case	"09":
+				String player=message.substring(2).trim();
+				if(player.equals(client.getName())){
+					client.drawTurn=true;
+					DrawerTurn.setText("Your turn");
+				}else{
+					client.drawTurn=false;
+					DrawerTurn.setText(player+"'s turn");
+				}
+				break;
+			case	"13":
+				if(client.drawer){
+					setCurrentWord(message.substring(2).trim());
+					wordField.setText("\tDraw: "+currentWord);
+				}else{
+					setCurrentWord(message.substring(2).trim());
+					String guesserWord="\t";
+					for(int i=0;i<currentWord.length();i++){
+						guesserWord=guesserWord+" _";
+					}
+					wordField.setText(guesserWord);
+				}
+				break;
+			case	"14":
 				repaint();
-			}
-			DrawerTurn.setText(message.substring(2).trim()+" is guessing");
+				client.drawer=true;
+				DrawerTurn.setText(message.substring(2).trim()+" is guessing");
+				break;
+			case	"15":
+				correct=true;
+				break;
+			default:
+				break;
 		}
 	}
 	
 	//Countdown Timer
-		public void countDown(){
-			client.sendMessage("10Draw".getBytes()); //Draw Turn
-			Timer timer = new Timer();
-			timer.schedule(new TimerTask(){
-				int turns=numberOfReadyPlayers-1;
-				int drawTurns=1;
-				
-				public void run(){
-					int drawTime=seconds-((numberOfReadyPlayers+1)*turns);
-					timerWindow.setText(drawTime+"");
-					if(drawTime==0 && drawTurns<numberOfReadyPlayers-1){
-						client.sendMessage("10Draw".getBytes()); //Draw Turn
-						drawTurns++;
-						turns--;
-					}else if(drawTime==0&& drawTurns==numberOfReadyPlayers-1){
-						client.sendMessage("11ChangeGuessTurn".getBytes());
-						drawTurns=1;
-						turns--;
-					}
-					seconds--;
-					if(seconds==0){
-						timer.cancel();
-					}
+	public void countDown(){
+		client.sendMessage("10Draw".getBytes()); //Draw Turn
+		Timer timer = new Timer();
+		setSeconds(allSeconds);
+		timer.schedule(new TimerTask(){
+			int turns=numberOfReadyPlayers-1;
+			int drawTurns=1;
+			
+			public void run(){
+				drawTime=seconds-(defSeconds*turns);
+				timerWindow.setText(drawTime+"");
+				if(drawTime==0 && drawTurns<numberOfReadyPlayers-1){
+					client.sendMessage("10Draw".getBytes()); //Draw Turn
+					drawTurns++;
+					turns--;
+				}else if(drawTime==0&& drawTurns==numberOfReadyPlayers-1){
+					client.sendMessage("11ChangeGuessTurn".getBytes());
+					drawTurns=1;
+					turns--;
 				}
-			},0,1000);
-		}
+				seconds--;
+				if(seconds==0){
+					if(correct) {
+						printToChat("02Nice");
+					}else {
+						printToChat("02Time's up! The word was "+currentWord);
+					}
+					client.sendMessage("16Unready".getBytes());
+					clearCanvas();
+					timerWindow.setText(allSeconds+"");
+					setSeconds(allSeconds);
+					drawTime=allSeconds;
+					timer.cancel();
+				}
+			}
+		},3000,1000);
+	}
 	
 	public void isCurrentDrawer(String nameMessage){
 		if(client.getName().equals(nameMessage)){
@@ -235,6 +288,14 @@ public class ClientGUI extends JFrame implements Runnable{
 		}else{
 			client.myTurn=false;
 		}
+	}
+	
+	public void clearCanvas() {
+		Graphics g = mainCanvas.getGraphics();
+		oldPoints.clear();
+		points.clear();
+		g.setColor(new Color(247,247,242));
+		g.fillRect(0, 0, mainCanvas.getWidth(), mainCanvas.getHeight());
 	}
 	
 	//GUI stuff(ignore)
@@ -245,7 +306,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 900, 600);
 		contentPane = new JPanel();
-		contentPane.setBackground(new Color(224, 255, 255));
+		contentPane.setBackground(new Color(238, 245, 219));
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
@@ -278,77 +339,77 @@ public class ClientGUI extends JFrame implements Runnable{
 		contentPane.add(ChatBox);
 		ChatBox.setColumns(10);
 		
-		
-		
-		JButton ClearButton = new JButton("Clear Board");
-		ClearButton.setBackground(new Color(255, 255, 255));
-		ClearButton.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseReleased(MouseEvent arg0) {
-				String clear="03Clear";
-				client.sendMessage(clear.getBytes());
-			}
-		});
-		
 
 		mainCanvas = new JPanel();
-		mainCanvas.setBackground(Color.WHITE);
+		mainCanvas.setBackground(new Color(247,247,242));
 		mainCanvas.setBounds(20, 70, 690, 490);
 		contentPane.add(mainCanvas);
 		mainCanvas.setLayout(null);
 		
+		System.out.println(System.getProperty("user.dir"));
 		mainCanvas.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				setCurrXY(e.getX(),e.getY());
 			}
 		});
+		try {
+			img = ImageIO.read(new File("src/Images/pencil.png"));
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		Toolkit toolkit = Toolkit.getDefaultToolkit();
+		Image image = toolkit.getImage("src/Images/pencil.png");
+		Cursor c = toolkit.createCustomCursor(image , new Point(contentPane.getX(), 
+		           contentPane.getY()), "img");
+		contentPane.setCursor (c);
 		mainCanvas.addMouseMotionListener(new MouseMotionAdapter() {
 			@Override
 			public void mouseDragged(MouseEvent e) {
-				System.out.println(e.getX()+" "+e.getY());
 				if(client.drawTurn&&e.getX()>0&&e.getY()>0&&e.getX()<mainCanvas.getWidth()&&e.getY()<mainCanvas.getHeight()){
 					draw(e.getX(),e.getY());
 				}
 			}
 		});
 		
-		ClearButton.setBounds(10, 11, 89, 23);
-		contentPane.add(ClearButton);
-		
 		timerWindow = new JTextField();
 		timerWindow.setHorizontalAlignment(SwingConstants.CENTER);
 		timerWindow.setBackground(new Color(245, 255, 250));
 		timerWindow.setEditable(false);
-		timerWindow.setFont(new Font("Oxygen", Font.BOLD, 16));
-		timerWindow.setBounds(676, 11, 34, 47);
+		timerWindow.setFont(new Font("Oxygen", Font.BOLD, 18));
+		timerWindow.setBounds(109, 12, 55, 47);
 		contentPane.add(timerWindow);
 		timerWindow.setColumns(10);
 		
-		JButton changeTurn = new JButton("Turn");
-		changeTurn.setBackground(new Color(255, 255, 255));
-		changeTurn.addMouseListener(new MouseAdapter() {
+		JButton readyBtn = new JButton("Ready");
+		readyBtn.setFont(new Font("Verdana", Font.PLAIN, 16));
+		readyBtn.setForeground(UIManager.getColor("textText"));
+		readyBtn.setBackground(new Color(204, 255, 255));
+		readyBtn.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent arg0) {
-				client.changeTurn();
+				client.ready="true";
+				client.sendMessage(("05"+client.getName()).getBytes());
 			}
 		});
-		changeTurn.setBounds(10, 40, 89, 23);
-		contentPane.add(changeTurn);
+		readyBtn.setBounds(10, 11, 89, 47);
+		contentPane.add(readyBtn);
 		
 		DrawerTurn = new JTextField();
 		DrawerTurn.setHorizontalAlignment(SwingConstants.LEFT);
 		DrawerTurn.setBackground(new Color(255, 255, 255));
 		DrawerTurn.setEditable(false);
-		DrawerTurn.setFont(new Font("Segoe UI Semibold", Font.PLAIN, 12));
-		DrawerTurn.setBounds(502, 12, 164, 46);
+		DrawerTurn.setFont(new Font("Segoe UI Semibold", Font.PLAIN, 17));
+		DrawerTurn.setBounds(546, 13, 164, 46);
 		contentPane.add(DrawerTurn);
 		DrawerTurn.setColumns(10);
 		
 		wordField = new JTextField();
+		wordField.setFont(new Font("Verdana", Font.PLAIN, 26));
 		wordField.setEditable(false);
 		wordField.setBackground(new Color(255, 255, 255));
-		wordField.setBounds(125, 12, 362, 46);
+		wordField.setBounds(174, 13, 362, 46);
 		contentPane.add(wordField);
 		wordField.setColumns(10);
 		
@@ -366,8 +427,8 @@ public class ClientGUI extends JFrame implements Runnable{
 		int oldYsend=currYsend;
 		currXsend=x;
 		currYsend=y;
-		Point oldP = new Point(oldXsend,oldYsend);
-		Point p=new Point(x,y);
+		Point oldP = new Point(oldXsend+20,oldYsend+100);
+		Point p=new Point(x+20,y+100);
 		oldPoints.add(oldP);
 		points.add(p);
 		repaint();
@@ -387,13 +448,18 @@ public class ClientGUI extends JFrame implements Runnable{
 		      int oldy = p0.y;
 		      int x = p1.x;
 		      int y = p1.y;
-		      g.drawLine(oldx+20, oldy+100, x+20, y+100);
+		      g.drawLine(oldx, oldy, x, y);
 		    }
 		}else{
-			g.setColor(Color.WHITE);
+			g.setColor(new Color(247,247,242));
 			g.fillRect(20, 100, mainCanvas.getWidth(), mainCanvas.getHeight());
 		}
 	}
+	
+	public void setCurrentWord(String currentWord) {
+		this.currentWord=currentWord;
+	}
+	
 	
 	//Timer seconds
 	public void setSeconds(int seconds){
