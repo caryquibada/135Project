@@ -71,6 +71,7 @@ public class ClientGUI extends JFrame implements Runnable{
     private List<Point> oldPoints = new ArrayList<Point>();
     private JTextField nextField;
 	public ClientGUI(String name,String IPAddress, int port,String word){
+		setTitle(name);
 		setBackground(new Color(255, 255, 255));
 		addWindowListener(new WindowAdapter() {
 			@Override
@@ -384,7 +385,7 @@ public class ClientGUI extends JFrame implements Runnable{
 	//GUI stuff(ignore)
 	public void showWindow() {
 		setVisible(true);
-		setTitle("Sketch Window");
+		//setTitle("Sketch Window");
 		setResizable(false);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 900, 600);
