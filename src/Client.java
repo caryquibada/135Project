@@ -15,9 +15,11 @@ public class Client {
 	private String IPAddress;
 	private int port;
 	private int ID;
+	public int score=0;
 	private DatagramSocket socket;
 	private InetAddress IP;
 	private String word;
+	public boolean guesser=false;
 	public boolean drawer=true;
 	public boolean myTurn=false; //If turn to guess
 	public boolean drawTurn=false;

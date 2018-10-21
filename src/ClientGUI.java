@@ -17,6 +17,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import javax.swing.JFrame;
 import javax.swing.JLayeredPane;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -34,6 +35,8 @@ import java.awt.event.MouseEvent;
 
 import javax.imageio.ImageIO;
 import javax.swing.JButton;
+import javax.swing.JDialog;
+
 import java.awt.event.MouseAdapter;
 import java.awt.Font;
 import java.awt.event.WindowAdapter;
@@ -66,6 +69,7 @@ public class ClientGUI extends JFrame implements Runnable{
     private Image img;
     private List<Point> points = new ArrayList<Point>();
     private List<Point> oldPoints = new ArrayList<Point>();
+    private JTextField nextField;
 	public ClientGUI(String name,String IPAddress, int port,String word){
 		setBackground(new Color(255, 255, 255));
 		addWindowListener(new WindowAdapter() {
@@ -85,6 +89,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		clientRunning = true;
 		run = new Thread(this,"Client Thread");
 		run.start();
+
 	}
 	//Appending to chat text area
 	public void printToChat(String message){
@@ -191,9 +196,11 @@ public class ClientGUI extends JFrame implements Runnable{
 				System.out.println(guesser);
 				if(guesser.equals(client.getName())){
 					System.out.println("Guesser");
+					client.guesser=true;
 					client.drawer=false;
 					client.myTurn=true;
 				}else{
+					client.guesser=false;
 					client.myTurn=false;
 					client.drawer=true;
 				}
@@ -238,6 +245,9 @@ public class ClientGUI extends JFrame implements Runnable{
 			case	"15":
 				correct=true;
 				break;
+			case	"17":
+				nextField.setText(message.substring(2).trim());
+				break;
 			default:
 				break;
 		}
@@ -254,7 +264,64 @@ public class ClientGUI extends JFrame implements Runnable{
 			
 			public void run(){
 				drawTime=seconds-(defSeconds*turns);
-				timerWindow.setText(drawTime+"");
+				Graphics g= timerWindow.getGraphics();
+				g.setColor(Color.WHITE);
+				g.fillRect(0, 0, timerWindow.WIDTH, timerWindow.HEIGHT);
+				System.out.println(drawTime);
+				switch (drawTime) {
+					case	0:
+						Image img0;
+						try {
+							img0 = ImageIO.read(new File("src/Images/0.png"));
+							g.drawImage(img0, 0, 0, null);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						break;
+					case	1:
+						Image img1;
+						try {
+							img1 = ImageIO.read(new File("src/Images/1.png"));
+							g.drawImage(img1, 0, 0, null);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						break;
+					case	2:
+						Image img2;
+						try {
+							img2 = ImageIO.read(new File("src/Images/2.png"));
+							g.drawImage(img2, 0, 0, null);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						break;
+					case	3:
+						Image img3;
+						try {
+							img3 = ImageIO.read(new File("src/Images/3.png"));
+							g.drawImage(img3, 0, 0, null);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						break;
+					case	4:
+						Image img4;
+						try {
+							img4 = ImageIO.read(new File("src/Images/4.png"));
+							g.drawImage(img4, 0, 0, null);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						break;
+					default:
+						break;
+				}
 				if(drawTime==0 && drawTurns<numberOfReadyPlayers-1){
 					client.sendMessage("10Draw".getBytes()); //Draw Turn
 					drawTurns++;
@@ -268,14 +335,30 @@ public class ClientGUI extends JFrame implements Runnable{
 				if(seconds==0){
 					if(correct) {
 						printToChat("02Nice");
+						if(client.guesser) {
+							client.score=client.score+3;
+							client.guesser=false;
+						}else {
+							client.score=client.score+2;
+						}
 					}else {
 						printToChat("02Time's up! The word was "+currentWord);
 					}
 					client.sendMessage("16Unready".getBytes());
 					clearCanvas();
-					timerWindow.setText(allSeconds+"");
+					DrawerTurn.setText("");
+					wordField.setText("Ready up!");
+					timerWindow.setText("");
 					setSeconds(allSeconds);
 					drawTime=allSeconds;
+					Image clear;
+					try {
+						clear = ImageIO.read(new File("src/Images/clear.png"));
+						g.drawImage(clear, 0, 0, null);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 					timer.cancel();
 				}
 			}
@@ -381,6 +464,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		timerWindow.setBounds(109, 12, 55, 47);
 		contentPane.add(timerWindow);
 		timerWindow.setColumns(10);
+		System.out.println("Width: "+timerWindow.WIDTH+" Height:"+timerWindow.HEIGHT);
 		
 		JButton readyBtn = new JButton("Ready");
 		readyBtn.setFont(new Font("Verdana", Font.PLAIN, 16));
@@ -401,17 +485,26 @@ public class ClientGUI extends JFrame implements Runnable{
 		DrawerTurn.setBackground(new Color(255, 255, 255));
 		DrawerTurn.setEditable(false);
 		DrawerTurn.setFont(new Font("Segoe UI Semibold", Font.PLAIN, 17));
-		DrawerTurn.setBounds(546, 13, 164, 46);
+		DrawerTurn.setBounds(470, 11, 109, 48);
 		contentPane.add(DrawerTurn);
 		DrawerTurn.setColumns(10);
 		
 		wordField = new JTextField();
-		wordField.setFont(new Font("Verdana", Font.PLAIN, 26));
+		wordField.setFont(new Font("Dialog", Font.PLAIN, 20));
 		wordField.setEditable(false);
 		wordField.setBackground(new Color(255, 255, 255));
-		wordField.setBounds(174, 13, 362, 46);
+		wordField.setBounds(174, 11, 286, 48);
 		contentPane.add(wordField);
 		wordField.setColumns(10);
+		
+		nextField = new JTextField();
+		nextField.setHorizontalAlignment(SwingConstants.LEFT);
+		nextField.setFont(new Font("Segoe UI Semibold", Font.PLAIN, 17));
+		nextField.setEditable(false);
+		nextField.setColumns(10);
+		nextField.setBackground(Color.WHITE);
+		nextField.setBounds(589, 11, 121, 48);
+		contentPane.add(nextField);
 		
 	}
 	
@@ -460,7 +553,11 @@ public class ClientGUI extends JFrame implements Runnable{
 		this.currentWord=currentWord;
 	}
 	
-	
+	public void winWindow() {
+		JOptionPane winDialog= new JOptionPane("Win!");
+		winDialog.showMessageDialog(contentPane, "Correct!", "Winner!!", JOptionPane.PLAIN_MESSAGE);
+		winDialog.setVisible(true);
+	}
 	//Timer seconds
 	public void setSeconds(int seconds){
 		this.seconds=seconds;

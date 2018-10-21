@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -41,7 +42,7 @@ public class Server extends JFrame implements Runnable{
 	private JTextField commandLine;
 	Thread clients;
 	private JScrollPane scrollPane;
-	public int drawerTurn=0,guesserCount=1,currGuess=1,drawerCount=1,guessThreshold=1;
+	public int drawerTurn=0,guesserCount=1,currGuess=1,drawerCount=1,guessThreshold=1,rounds=0;
 
 	public Server(int port) throws UnknownHostException{
 		setResizable(false); //Constructor for opening the Datagram Socket on port given by the server creator.
@@ -180,18 +181,18 @@ public class Server extends JFrame implements Runnable{
 	public void getCurrentDrawer(){
 		String currentDrawer="09"+players.get(drawerTurn);
 		sendToDrawers(currentDrawer);
-		if(drawerTurn<players.size()-2) {
-			String nextDrawer="01"+players.get(drawerTurn+1)+" is the next drawer! Be ready!";
+		if(drawerTurn<players.size()-1) {
+			String nextDrawer="17"+"Next: "+players.get(drawerTurn+1);
 			sendToDrawers(nextDrawer);
 		}else {
-			String nextDrawer="01"+players.get(drawerTurn+1)+" is guessing after! Be ready!";
+			String nextDrawer="17"+"Guessing turn";
 			sendToDrawers(nextDrawer);
 		}
-		
 		logToServer("drawerTurn: "+drawerTurn+" Current drawer: "+players.get(drawerTurn)+" "+players.toString());
 		drawerTurn++;
 	}
 	public void checkGameStart(){
+		
 		int readyPlayers=0;
 		for(int i=0;i<clientList.size();i++){
 			if(clientList.get(i).ready.equals("true"))
@@ -199,10 +200,9 @@ public class Server extends JFrame implements Runnable{
 		}
 		if(readyPlayers==clientList.size()){
 			if(readyPlayers>3){
+				drawerTurn=0;
 				sendToDrawers("06"+clientList.size());
 				sendToDrawers("03Clear");
-				shufflePlayers();
-				shuffleWords();
 				guesserCount=players.size();
 				getGuesser();
 			}else{
@@ -214,20 +214,28 @@ public class Server extends JFrame implements Runnable{
 	}
 
 	public void getGuesser(){
-			sendToDrawers("03ClearBoard");
-			sendToDrawers("07"+players.get(0));
-			logToServer(players.get(0));
-			System.out.println("Current guesser: "+players.get(0));
-			String drawers="08";
-			for(int i=1;i<players.size();i++){
-				drawers=drawers+players.get(i)+"\t";
-			}
-			sendToDrawers(drawers);
-			sendToDrawers("13"+words.get(0));
-			Collections.rotate(words, -1);
-			Collections.rotate(players, -1);
-			logToServer("getGuesser"+players.toString());
-			guesserCount=0;
+		if(rounds==0) {
+			shufflePlayers();
+			shuffleWords();
+		}else if(rounds==players.size()) {
+			sendToDrawers("No more rounds left!");
+			return;
+		}
+		rounds++;
+		sendToDrawers("03ClearBoard");
+		sendToDrawers("07"+players.get(0));
+		logToServer(players.get(0));
+		System.out.println("Current guesser: "+players.get(0));
+		String drawers="08";
+		for(int i=1;i<players.size();i++){
+			drawers=drawers+players.get(i)+"\t";
+		}
+		sendToDrawers(drawers);
+		sendToDrawers("13"+words.get(0));
+		Collections.rotate(words, -1);
+		Collections.rotate(players, -1);
+		logToServer("getGuesser"+players.toString());
+		guesserCount=0;
 	}
 	public void shufflePlayers(){
 		for(int i=0;i<clientList.size();i++){

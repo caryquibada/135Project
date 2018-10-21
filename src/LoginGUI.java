@@ -35,7 +35,7 @@ public class LoginGUI extends JFrame {
 		setResizable(false);
 		setTitle("Login");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 495, 227);
+		setBounds(100, 100, 266, 324);
 		contentPane = new JPanel();
 		
 		contentPane.setBackground(new Color(255, 255, 255));
@@ -59,11 +59,11 @@ public class LoginGUI extends JFrame {
 		String[] IP = InetAddress.getLocalHost().toString().split("/");
 		IPField.setText(IP[1]);
 		IPField.setColumns(10);
-		IPField.setBounds(115, 75, 130, 44);
+		IPField.setBounds(115, 109, 130, 44);
 		contentPane.add(IPField);
 		lblIpAddress = new JLabel("IP Address:");
 		lblIpAddress.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		lblIpAddress.setBounds(10, 88, 151, 14);
+		lblIpAddress.setBounds(10, 122, 151, 14);
 		contentPane.add(lblIpAddress);
 		
 		//Port text field
@@ -71,22 +71,22 @@ public class LoginGUI extends JFrame {
 		PortField.setFont(new Font("Arial", Font.PLAIN, 14));
 		PortField.setText("3000");
 		PortField.setColumns(10);
-		PortField.setBounds(348, 76, 130, 44);
+		PortField.setBounds(115, 164, 130, 44);
 		contentPane.add(PortField);
 		lblPort = new JLabel("Port:");
 		lblPort.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		lblPort.setBounds(255, 88, 130, 14);
+		lblPort.setBounds(10, 176, 130, 14);
 		contentPane.add(lblPort);
 		
 		//Desired word text field
 		WordField = new JTextField();
 		WordField.setFont(new Font("Arial", Font.PLAIN, 14));
 		WordField.setColumns(10);
-		WordField.setBounds(348, 13, 130, 38);
+		WordField.setBounds(115, 60, 130, 38);
 		contentPane.add(WordField);
 		JLabel lblWord = new JLabel("Your word:");
 		lblWord.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		lblWord.setBounds(255, 25, 130, 14);
+		lblWord.setBounds(10, 69, 130, 14);
 		contentPane.add(lblWord);
 		
 		//LOGIN button
@@ -104,7 +104,7 @@ public class LoginGUI extends JFrame {
 			}
 		});
 		LoginBTN.setFont(new Font("Yu Gothic UI", Font.BOLD, 26));
-		LoginBTN.setBounds(10, 130, 468, 61);
+		LoginBTN.setBounds(10, 219, 235, 61);
 		contentPane.add(LoginBTN);
 		
 		
