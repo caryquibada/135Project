@@ -11,7 +11,7 @@ public class ClientStorage {
 	public InetAddress address;
 	public int port;
 	public final int ID;
-	public int attempt=0;
+	public int attempt=0,score=0;
 	public String ready="false";
 	public boolean drawer=true;
 	public String word;

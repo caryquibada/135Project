@@ -27,6 +27,9 @@ import javax.swing.text.DefaultCaret;
 import javax.swing.JTextArea;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
 import javax.swing.JScrollPane;
 
 public class Server extends JFrame implements Runnable{
@@ -34,20 +37,27 @@ public class Server extends JFrame implements Runnable{
 	private List<ClientStorage> clientList = new ArrayList<ClientStorage>();
 	public List<String> words= new ArrayList<String>();
 	public List<String> players = new ArrayList<String>();
+	private List<Integer> voteScore = new ArrayList<Integer>();
 	private DatagramSocket socket;
-	private int port,seconds;
+	private int port,seconds,voted=0;
 	private Thread runServer,receive,send;
 	private boolean serverRunning;
 	private JTextArea responseLog;
 	private JTextField commandLine;
 	Thread clients;
 	private JScrollPane scrollPane;
-	public int drawerTurn=0,guesserCount=1,currGuess=1,drawerCount=1,guessThreshold=1,rounds=0;
+	public int drawerTurn=0,guesserCount=1,currGuess=1,drawerCount=1,guessThreshold=1,rounds=0,scoreCount=1,voteCount=0,voteThresh=1;
 
 	public Server(int port) throws UnknownHostException{
 		setResizable(false); //Constructor for opening the Datagram Socket on port given by the server creator.
 		this.port=port;
 		showWindow();
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent arg0) {
+				sendToDrawers("20CloseAll");
+			}
+		});
 		try {
 			socket = new DatagramSocket(port,InetAddress.getLocalHost());
 			logToServer(InetAddress.getLocalHost().toString());
@@ -173,6 +183,56 @@ public class Server extends JFrame implements Runnable{
 					clientList.get(i).ready="false";
 				}
 				break;
+			case	"18":
+				String[] scores=message.substring(2).trim().split("-");
+				for(int i=0;i<clientList.size();i++) {
+					if(clientList.get(i).getName().equals(scores[0])) {
+						clientList.get(i).score=Integer.parseInt(scores[1]);
+					}
+				}
+				break;
+			case	"19":
+				if(scoreCount==players.size()) {
+					String scoreList="01Scores\n";
+					for(int i=0;i<clientList.size();i++) {
+						scoreList=scoreList+clientList.get(i).getName()+"-"+clientList.get(i).score+"\n";
+					}
+					sendToDrawers(scoreList);
+				}
+				scoreCount++;
+				break;
+			case	"21":
+				String vote=message.substring(2).trim();
+				for(int i=0;i<players.size();i++) {
+					if(players.get(i).equals(vote)) {
+						voteScore.set(i, voteScore.get(i)+1);
+					}
+				}
+				voted++;
+				if(voted==players.size()-1) {
+					sendToDrawers("22");
+					logToServer("Voted: "+voted+"");
+					voted=0;
+				}
+				break;
+			case	"22":
+				logToServer("voteThresh: "+voteThresh);
+				if(voteThresh==players.size()-1) {
+					int max=Collections.max(voteScore);
+					String voteWinners="23";
+					for(int i=0;i<voteScore.size();i++) {
+						System.out.println("Passed 22");
+						if(voteScore.get(i)==max) {
+							voteWinners=voteWinners+players.get(i)+"\t";
+						}
+					}
+					logToServer("Vote Winners:"+voteWinners);
+					sendToDrawers(voteWinners);
+					voteThresh=0;
+					voted=0;
+				}
+				voteThresh++;
+				break;
 			default: 
 				break;
 		}
@@ -227,8 +287,10 @@ public class Server extends JFrame implements Runnable{
 		logToServer(players.get(0));
 		System.out.println("Current guesser: "+players.get(0));
 		String drawers="08";
+		voteScore.clear();
 		for(int i=1;i<players.size();i++){
 			drawers=drawers+players.get(i)+"\t";
+			voteScore.add(0);
 		}
 		sendToDrawers(drawers);
 		sendToDrawers("13"+words.get(0));

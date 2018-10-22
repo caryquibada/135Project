@@ -1,7 +1,7 @@
 /*Code and structure for chat, client storage and handling login from user "TheChernoProject" on Youtube
  * Youtube Channel: https://www.youtube.com/user/TheChernoProject
- * Github Repo: https://github.com/TheCherno/ChernoChat/tree/master/src/com/thecherno/chernochat 
- * Github,Youtube. (2014). Cherno Chat. [online] Available at: https://github.com/TheCherno/ChernoChat/tree/master/src/com/thecherno/chernochat, https://www.youtube.com/user/TheChernoProject [Accessed 24 Sep. 2018].*/
+ * Github Repo: https://github.com/TheCherno/ChernoChat/tree/master/com/thecherno/chernochat 
+ * Github,Youtube. (2014). Cherno Chat. [online] Available at: https://github.com/TheCherno/ChernoChat/tree/master/com/thecherno/chernochat, https://www.youtube.com/user/TheChernoProject [Accessed 24 Sep. 2018].*/
 
 import java.awt.Canvas;
 import java.awt.Color;
@@ -60,7 +60,7 @@ public class ClientGUI extends JFrame implements Runnable{
 	private int ID=0,seconds=0,defSeconds,drawTime=100,allSeconds;
 	private int currXsend,currYsend,currXreceive,currYreceive;
     private JPanel mainCanvas,coverPanel;
-    private int turns=0,numberOfReadyPlayers;
+    private int turns=0,numberOfReadyPlayers,voteCountdown=0;
     private JTextField timerWindow;
     private JTextField DrawerTurn;
     private JTextField wordField;
@@ -70,8 +70,10 @@ public class ClientGUI extends JFrame implements Runnable{
     private List<Point> points = new ArrayList<Point>();
     private List<Point> oldPoints = new ArrayList<Point>();
     private JTextField nextField;
+    private JTextField scoreField;
+    private String[] drawers;
 	public ClientGUI(String name,String IPAddress, int port,String word){
-		setTitle(name);
+		setTitle("QuickDraw! \t"+name);
 		setBackground(new Color(255, 255, 255));
 		addWindowListener(new WindowAdapter() {
 			@Override
@@ -176,21 +178,22 @@ public class ClientGUI extends JFrame implements Runnable{
 				clearCanvas();
 				break;
 			case	"06":
+				gameStartCountdown();
 				numberOfReadyPlayers=Integer.parseInt(message.substring(2).trim());
 				if(numberOfReadyPlayers==4){
-					seconds=5*4;
-					allSeconds=5*4;
-					defSeconds=5;
-				}else if(numberOfReadyPlayers==5){
-					seconds=4*5;
-					allSeconds=4*5;
+					seconds=4*4;
+					allSeconds=4*4;
 					defSeconds=4;
-				}else if(numberOfReadyPlayers>5){
-					seconds=3*numberOfReadyPlayers;
-					allSeconds=3*numberOfReadyPlayers;
+				}else if(numberOfReadyPlayers==5){
+					seconds=3*5;
+					allSeconds=3*5;
 					defSeconds=3;
+				}else if(numberOfReadyPlayers>5){
+					seconds=2*numberOfReadyPlayers;
+					allSeconds=2*numberOfReadyPlayers;
+					defSeconds=2;
 				}
-				countDown();
+				
 				break;
 			case	"07":
 				guesser=message.substring(2).trim();
@@ -207,7 +210,7 @@ public class ClientGUI extends JFrame implements Runnable{
 				}
 				break;
 			case	"08":
-				String[] drawers= message.trim().split("\t");
+				drawers= message.trim().split("\t");
 				for(int i=0;i<drawers.length;i++){
 					if(drawers[i].equals(client.getName())){
 						client.drawer=true;
@@ -249,9 +252,75 @@ public class ClientGUI extends JFrame implements Runnable{
 			case	"17":
 				nextField.setText(message.substring(2).trim());
 				break;
+			case	"20":
+				printToChat("01Client closing since server is closed.");
+				closeCountdown();
+				break;
+			case	"22":
+				voteCountdown=1;
+				break;
+			case	"23":
+				String[] winners=message.substring(2).trim().split("\t");
+				printToChat("01Most votes-");
+				for(int i=0;i<winners.length;i++) {
+					printToChat("01"+winners[i]);
+				}
+				for(int i=0;i<winners.length;i++) {
+					if(winners[i].equals(client.getName())) {
+						if(correct) {
+							correct=false;
+							client.score=client.score++;
+						}else {
+							client.score=client.score--;
+						}
+					}
+				}
+				scoreField.setText("Your score: "+client.score );
+				client.sendMessage(("18"+client.getName()+"-"+client.score).getBytes());
+				client.sendMessage("19".getBytes());
 			default:
 				break;
 		}
+	}
+	
+	public void showVoting() {
+		drawers[0]=drawers[0].substring(2);
+	    int rc = JOptionPane.showOptionDialog(null, "Question ?", "Confirmation",
+	        JOptionPane.WARNING_MESSAGE, 0, null, drawers, null);
+	    client.sendMessage(("21"+drawers[rc]).getBytes());
+	}
+	
+	public void startVoteCountdown() {
+		Timer timer = new Timer();
+		voteCountdown=10;
+		timer.schedule(new TimerTask(){
+			public void run() {
+				nextField.setText(voteCountdown+"");
+				voteCountdown--;
+				if(voteCountdown==0) {
+					nextField.setText("");
+					client.sendMessage("22Done".getBytes());
+					timer.cancel();
+				}
+			}
+		},0,1000);
+	}
+	
+	public void gameStartCountdown() {
+		Timer timer = new Timer();
+		
+		timer.schedule(new TimerTask(){
+			int countdown=3;
+			public void run() {
+				printToChat("01Game starting in:"+countdown);
+				countdown--;
+				if(countdown==0) {
+					countDown();
+					timer.cancel();
+				}
+					
+			}
+		},0,1000);
 	}
 	
 	//Countdown Timer
@@ -268,12 +337,11 @@ public class ClientGUI extends JFrame implements Runnable{
 				Graphics g= timerWindow.getGraphics();
 				g.setColor(Color.WHITE);
 				g.fillRect(0, 0, timerWindow.WIDTH, timerWindow.HEIGHT);
-				System.out.println(drawTime);
 				switch (drawTime) {
 					case	0:
 						Image img0;
 						try {
-							img0 = ImageIO.read(new File("src/Images/0.png"));
+							img0 = ImageIO.read(new File("Images/0.png"));
 							g.drawImage(img0, 0, 0, null);
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
@@ -283,7 +351,7 @@ public class ClientGUI extends JFrame implements Runnable{
 					case	1:
 						Image img1;
 						try {
-							img1 = ImageIO.read(new File("src/Images/1.png"));
+							img1 = ImageIO.read(new File("Images/1.png"));
 							g.drawImage(img1, 0, 0, null);
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
@@ -293,7 +361,7 @@ public class ClientGUI extends JFrame implements Runnable{
 					case	2:
 						Image img2;
 						try {
-							img2 = ImageIO.read(new File("src/Images/2.png"));
+							img2 = ImageIO.read(new File("Images/2.png"));
 							g.drawImage(img2, 0, 0, null);
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
@@ -303,7 +371,7 @@ public class ClientGUI extends JFrame implements Runnable{
 					case	3:
 						Image img3;
 						try {
-							img3 = ImageIO.read(new File("src/Images/3.png"));
+							img3 = ImageIO.read(new File("Images/3.png"));
 							g.drawImage(img3, 0, 0, null);
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
@@ -313,7 +381,7 @@ public class ClientGUI extends JFrame implements Runnable{
 					case	4:
 						Image img4;
 						try {
-							img4 = ImageIO.read(new File("src/Images/4.png"));
+							img4 = ImageIO.read(new File("Images/4.png"));
 							g.drawImage(img4, 0, 0, null);
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
@@ -331,6 +399,7 @@ public class ClientGUI extends JFrame implements Runnable{
 					client.sendMessage("11ChangeGuessTurn".getBytes());
 					drawTurns=1;
 					turns--;
+					nextField.setText("Guessing Turn");
 				}
 				seconds--;
 				if(seconds==0){
@@ -338,32 +407,47 @@ public class ClientGUI extends JFrame implements Runnable{
 						printToChat("02Nice");
 						if(client.guesser) {
 							client.score=client.score+3;
-							client.guesser=false;
 						}else {
 							client.score=client.score+2;
 						}
 					}else {
+						client.score=client.score++;
 						printToChat("02Time's up! The word was "+currentWord);
 					}
 					client.sendMessage("16Unready".getBytes());
-					clearCanvas();
-					DrawerTurn.setText("");
-					wordField.setText("Ready up!");
-					timerWindow.setText("");
+					client.sendMessage(("18"+client.getName()+"-"+client.score).getBytes());
+					client.sendMessage("19".getBytes());
+					clearFields();
 					setSeconds(allSeconds);
 					drawTime=allSeconds;
 					Image clear;
 					try {
-						clear = ImageIO.read(new File("src/Images/clear.png"));
+						clear = ImageIO.read(new File("Images/clear.png"));
 						g.drawImage(clear, 0, 0, null);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
+					if(!client.guesser) {
+						startVoteCountdown();
+						showVoting();
+					}
+					client.guesser=false;
 					timer.cancel();
 				}
 			}
-		},3000,1000);
+		},0,1000);
+	}
+	
+	public void clearFields() {
+		clearCanvas();
+		DrawerTurn.setText("");
+		timerWindow.setText("");
+		nextField.setText("");
+		ChatHistory.setText("");
+		nextField.setText("");
+		wordField.setText("Ready up!");
+		scoreField.setText("Your score: "+client.score );
 	}
 	
 	public void isCurrentDrawer(String nameMessage){
@@ -404,7 +488,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 		
 		JScrollPane ChatScroll= new JScrollPane(ChatHistory);
-		ChatScroll.setBounds(720, 11, 164, 491);
+		ChatScroll.setBounds(720, 70, 164, 432);
 		contentPane.add(ChatScroll);
 		
 		//ChatBox Text Field
@@ -438,13 +522,13 @@ public class ClientGUI extends JFrame implements Runnable{
 			}
 		});
 		try {
-			img = ImageIO.read(new File("src/Images/pencil.png"));
+			img = ImageIO.read(new File("Images/pencil.png"));
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		Toolkit toolkit = Toolkit.getDefaultToolkit();
-		Image image = toolkit.getImage("src/Images/pencil.png");
+		Image image = toolkit.getImage("Images/pencil.png");
 		Cursor c = toolkit.createCustomCursor(image , new Point(contentPane.getX(), 
 		           contentPane.getY()), "img");
 		contentPane.setCursor (c);
@@ -462,7 +546,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		timerWindow.setBackground(new Color(245, 255, 250));
 		timerWindow.setEditable(false);
 		timerWindow.setFont(new Font("Oxygen", Font.BOLD, 18));
-		timerWindow.setBounds(109, 12, 55, 47);
+		timerWindow.setBounds(184, 12, 55, 47);
 		contentPane.add(timerWindow);
 		timerWindow.setColumns(10);
 		System.out.println("Width: "+timerWindow.WIDTH+" Height:"+timerWindow.HEIGHT);
@@ -478,7 +562,7 @@ public class ClientGUI extends JFrame implements Runnable{
 				client.sendMessage(("05"+client.getName()).getBytes());
 			}
 		});
-		readyBtn.setBounds(10, 11, 89, 47);
+		readyBtn.setBounds(795, 12, 89, 47);
 		contentPane.add(readyBtn);
 		
 		DrawerTurn = new JTextField();
@@ -486,7 +570,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		DrawerTurn.setBackground(new Color(255, 255, 255));
 		DrawerTurn.setEditable(false);
 		DrawerTurn.setFont(new Font("Segoe UI Semibold", Font.PLAIN, 17));
-		DrawerTurn.setBounds(470, 11, 109, 48);
+		DrawerTurn.setBounds(545, 11, 109, 47);
 		contentPane.add(DrawerTurn);
 		DrawerTurn.setColumns(10);
 		
@@ -494,7 +578,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		wordField.setFont(new Font("Dialog", Font.PLAIN, 20));
 		wordField.setEditable(false);
 		wordField.setBackground(new Color(255, 255, 255));
-		wordField.setBounds(174, 11, 286, 48);
+		wordField.setBounds(249, 12, 286, 47);
 		contentPane.add(wordField);
 		wordField.setColumns(10);
 		
@@ -504,8 +588,17 @@ public class ClientGUI extends JFrame implements Runnable{
 		nextField.setEditable(false);
 		nextField.setColumns(10);
 		nextField.setBackground(Color.WHITE);
-		nextField.setBounds(589, 11, 121, 48);
+		nextField.setBounds(664, 11, 121, 48);
 		contentPane.add(nextField);
+		
+		scoreField = new JTextField();
+		scoreField.setHorizontalAlignment(SwingConstants.LEFT);
+		scoreField.setFont(new Font("Segoe UI Semibold", Font.PLAIN, 17));
+		scoreField.setEditable(false);
+		scoreField.setColumns(10);
+		scoreField.setBackground(Color.WHITE);
+		scoreField.setBounds(20, 12, 154, 47);
+		contentPane.add(scoreField);
 		
 	}
 	
@@ -562,5 +655,19 @@ public class ClientGUI extends JFrame implements Runnable{
 	//Timer seconds
 	public void setSeconds(int seconds){
 		this.seconds=seconds;
+	}
+	public void closeCountdown() {
+		Timer timer = new Timer();
+		timer.schedule(new TimerTask(){
+			int countdown=5;
+			public void run() {
+				printToChat("01"+countdown+"");
+				countdown--;
+				if(countdown==0) {
+					System.exit(0);
+					timer.cancel();
+				}
+			}
+		},0,1000);
 	}
 }
