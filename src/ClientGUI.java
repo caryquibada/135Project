@@ -16,6 +16,7 @@ import java.awt.Toolkit;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -34,6 +35,7 @@ import java.util.TimerTask;
 import java.awt.event.MouseEvent;
 
 import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 
@@ -47,6 +49,7 @@ import java.io.IOException;
 import javax.swing.SwingConstants;
 import javax.swing.JTextPane;
 import javax.swing.UIManager;
+import java.awt.BorderLayout;
 
 public class ClientGUI extends JFrame implements Runnable{
 
@@ -72,12 +75,19 @@ public class ClientGUI extends JFrame implements Runnable{
     private JTextField nextField;
     private JTextField scoreField;
     private String[] drawers;
+    private AvatarWindow avatar;
+    private JPanel AvatarPanel;
+    private List<JPanel> panels= new ArrayList<JPanel>();
+    private List<String> names = new ArrayList<String>();
+    private List<JLabel> labels = new ArrayList<JLabel>();
 	public ClientGUI(String name,String IPAddress, int port,String word){
 		setTitle("QuickDraw! \t"+name);
 		setBackground(new Color(255, 255, 255));
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent arg0) {
+				File avatar= new File("Images/"+client.getName()+".png");
+				avatar.delete();
 				String disconnectMessage="04"+name;
 				client.sendMessage(disconnectMessage.getBytes());
 			}
@@ -86,7 +96,6 @@ public class ClientGUI extends JFrame implements Runnable{
 		client = new Client(name,IPAddress,port,word);
 		client.drawTurn=true;
 		boolean connected=client.connect(IPAddress,port);
-		System.out.println("Name: "+name+" IP: "+IPAddress+" Port: "+port);
 		String connectPacket = "00"+name+","+word;
 		client.sendMessage(connectPacket.getBytes());
 		clientRunning = true;
@@ -118,7 +127,6 @@ public class ClientGUI extends JFrame implements Runnable{
 	//Constant receiving of message from the server and parsing the message.
 	
 	public void constantReceive(){
-		System.out.println(clientRunning);
 		constantReceive = new Thread("constantReceive"){
 			public void run(){
 				while(clientRunning){
@@ -134,17 +142,16 @@ public class ClientGUI extends JFrame implements Runnable{
 	public void parseMessage(String message){
 		
 		String condition=message.substring(0, 2);
-		System.out.println(condition);
 		switch(condition) {
 			case	"00":
 				client.setID(Integer.parseInt(message.substring(3,message.length()).trim()));
+				
 				sendPacket(client.getName()+" has connected");
 				break;
 			case	"01":
 				String[] chatMessage=message.split(":");
 				if(chatMessage.length>1){ 
-					System.out.println(client.drawer);
-					if(drawTime<=defSeconds&&client.myTurn&&seconds!=0){//When it's time to guess
+					if(client.myTurn&&seconds!=0){//When it's time to guess
 						String[] splitGuess=message.split(":");
 						if(splitGuess[1].trim().equals(currentWord)) {
 							printToChat("01Correct!");
@@ -152,7 +159,7 @@ public class ClientGUI extends JFrame implements Runnable{
 							client.sendMessage(win.getBytes());
 							seconds=1;
 						}else {
-							printToChat("01Incorrect! You only have seconds "+drawTime+" left!");
+							printToChat("01Incorrect!");
 						}
 					}else {
 						printToChat(message);
@@ -163,16 +170,12 @@ public class ClientGUI extends JFrame implements Runnable{
 				break;
 			case	"02":
 				String[] xy=message.substring(2).split(",");
-				
 				int oldx=Integer.parseInt(xy[0]);
 				int oldy=Integer.parseInt(xy[1]);
 				int x = Integer.parseInt(xy[2]);
 				int y = Integer.parseInt(xy[3].trim());
-				Point oldP = new Point(oldx+20,oldy+100);
-				Point p=new Point(x+20,y+100);
-				oldPoints.add(oldP);
-				points.add(p);
-				repaint();
+				Graphics g = mainCanvas.getGraphics();
+				g.drawLine(oldx, oldy, x, y);
 				break;
 			case	"03":
 				clearCanvas();
@@ -181,25 +184,23 @@ public class ClientGUI extends JFrame implements Runnable{
 				gameStartCountdown();
 				numberOfReadyPlayers=Integer.parseInt(message.substring(2).trim());
 				if(numberOfReadyPlayers==4){
-					seconds=4*4;
-					allSeconds=4*4;
-					defSeconds=4;
+					seconds=10*4;
+					allSeconds=10*4;
+					defSeconds=10;
 				}else if(numberOfReadyPlayers==5){
-					seconds=3*5;
-					allSeconds=3*5;
-					defSeconds=3;
+					seconds=7*5;
+					allSeconds=7*5;
+					defSeconds=7;
 				}else if(numberOfReadyPlayers>5){
-					seconds=2*numberOfReadyPlayers;
-					allSeconds=2*numberOfReadyPlayers;
-					defSeconds=2;
+					seconds=5*numberOfReadyPlayers;
+					allSeconds=5*numberOfReadyPlayers;
+					defSeconds=5;
 				}
 				
 				break;
 			case	"07":
 				guesser=message.substring(2).trim();
-				System.out.println(guesser);
 				if(guesser.equals(client.getName())){
-					System.out.println("Guesser");
 					client.guesser=true;
 					client.drawer=false;
 					client.myTurn=true;
@@ -242,12 +243,12 @@ public class ClientGUI extends JFrame implements Runnable{
 				}
 				break;
 			case	"14":
-				repaint();
 				client.drawer=true;
 				DrawerTurn.setText(message.substring(2).trim()+" is guessing");
 				break;
 			case	"15":
 				correct=true;
+				seconds=1;
 				break;
 			case	"17":
 				nextField.setText(message.substring(2).trim());
@@ -257,7 +258,7 @@ public class ClientGUI extends JFrame implements Runnable{
 				closeCountdown();
 				break;
 			case	"22":
-				voteCountdown=1;
+				client.sendMessage("22".getBytes());
 				break;
 			case	"23":
 				String[] winners=message.substring(2).trim().split("\t");
@@ -269,41 +270,59 @@ public class ClientGUI extends JFrame implements Runnable{
 					if(winners[i].equals(client.getName())) {
 						if(correct) {
 							correct=false;
-							client.score=client.score++;
+							client.score++;
 						}else {
-							client.score=client.score--;
+							client.score--;
 						}
 					}
 				}
 				scoreField.setText("Your score: "+client.score );
 				client.sendMessage(("18"+client.getName()+"-"+client.score).getBytes());
 				client.sendMessage("19".getBytes());
+			case	"24":
+				String[] namesSplit=message.substring(2).trim().split("\t");
+				names.clear();
+				panels.clear();
+				labels.clear();
+				for(int i=0;i<namesSplit.length;i++) {
+					names.add(namesSplit[i]);
+					panels.add(new JPanel());
+					labels.add(new JLabel(names.get(i)));
+					panels.get(i).setBounds(0, 0+((AvatarPanel.getHeight()/6)*i),AvatarPanel.getWidth(), (AvatarPanel.getHeight())/6);
+					AvatarPanel.add(panels.get(i));
+				}
+				updatePanels();
 			default:
 				break;
 		}
 	}
 	
-	public void showVoting() {
-		drawers[0]=drawers[0].substring(2);
-	    int rc = JOptionPane.showOptionDialog(null, "Question ?", "Confirmation",
-	        JOptionPane.WARNING_MESSAGE, 0, null, drawers, null);
-	    client.sendMessage(("21"+drawers[rc]).getBytes());
+	public void updatePanels() {
+		AvatarPanel.removeAll();
+		for(int i=0;i<panels.size();i++) {
+			System.out.println(panels.size());
+			panels.get(i).add(labels.get(i));
+			labels.get(i).setBounds(AvatarPanel.getHeight()/6,0,AvatarPanel.getWidth()-(AvatarPanel.getHeight()/6),AvatarPanel.getHeight()/6);
+			String[] filename=names.get(i).trim().split("-");
+			Image img;
+			try {
+				img = ImageIO.read(new File("Images/"+filename[0]+".png"));
+				img =img.getScaledInstance(panels.get(i).getHeight(),panels.get(i).getHeight(),Image.SCALE_SMOOTH);
+				panels.get(i).getGraphics().drawImage(img, 0, 0, null);
+				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
 	}
 	
-	public void startVoteCountdown() {
-		Timer timer = new Timer();
-		voteCountdown=10;
-		timer.schedule(new TimerTask(){
-			public void run() {
-				nextField.setText(voteCountdown+"");
-				voteCountdown--;
-				if(voteCountdown==0) {
-					nextField.setText("");
-					client.sendMessage("22Done".getBytes());
-					timer.cancel();
-				}
-			}
-		},0,1000);
+	public void showVoting() {
+		drawers[0]=drawers[0].substring(2);
+	    int rc = JOptionPane.showOptionDialog(null, "Vote for player", "Voting",
+	        JOptionPane.WARNING_MESSAGE, 0, null, drawers, null);
+	    client.sendMessage(("21"+drawers[rc]).getBytes());
 	}
 	
 	public void gameStartCountdown() {
@@ -388,6 +407,66 @@ public class ClientGUI extends JFrame implements Runnable{
 							e.printStackTrace();
 						}
 						break;
+					case	5:
+						Image img5;
+						try {
+							img5 = ImageIO.read(new File("Images/5.png"));
+							g.drawImage(img5, 0, 0, null);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						break;
+					case	6:
+						Image img6;
+						try {
+							img6 = ImageIO.read(new File("Images/6.png"));
+							g.drawImage(img6, 0, 0, null);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						break;
+					case	7:
+						Image img7;
+						try {
+							img7 = ImageIO.read(new File("Images/7.png"));
+							g.drawImage(img7, 0, 0, null);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						break;
+					case	8:
+						Image img8;
+						try {
+							img8 = ImageIO.read(new File("Images/8.png"));
+							g.drawImage(img8, 0, 0, null);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						break;
+					case	9:
+						Image img9;
+						try {
+							img9 = ImageIO.read(new File("Images/9.png"));
+							g.drawImage(img9, 0, 0, null);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						break;
+					case	10:
+						Image img10;
+						try {
+							img10 = ImageIO.read(new File("Images/10.png"));
+							g.drawImage(img10, 0, 0, null);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						break;
 					default:
 						break;
 				}
@@ -404,15 +483,14 @@ public class ClientGUI extends JFrame implements Runnable{
 				seconds--;
 				if(seconds==0){
 					if(correct) {
-						printToChat("02Nice");
+						printToChat("01Nice");
 						if(client.guesser) {
 							client.score=client.score+3;
 						}else {
 							client.score=client.score+2;
 						}
 					}else {
-						client.score=client.score++;
-						printToChat("02Time's up! The word was "+currentWord);
+						client.score=client.score+1;
 					}
 					client.sendMessage("16Unready".getBytes());
 					client.sendMessage(("18"+client.getName()+"-"+client.score).getBytes());
@@ -429,7 +507,6 @@ public class ClientGUI extends JFrame implements Runnable{
 						e.printStackTrace();
 					}
 					if(!client.guesser) {
-						startVoteCountdown();
 						showVoting();
 					}
 					client.guesser=false;
@@ -460,8 +537,6 @@ public class ClientGUI extends JFrame implements Runnable{
 	
 	public void clearCanvas() {
 		Graphics g = mainCanvas.getGraphics();
-		oldPoints.clear();
-		points.clear();
 		g.setColor(new Color(247,247,242));
 		g.fillRect(0, 0, mainCanvas.getWidth(), mainCanvas.getHeight());
 	}
@@ -472,24 +547,26 @@ public class ClientGUI extends JFrame implements Runnable{
 		//setTitle("Sketch Window");
 		setResizable(false);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 900, 600);
+		setBounds(0, 0, 1369, 700);
 		contentPane = new JPanel();
 		contentPane.setBackground(new Color(238, 245, 219));
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		
-		//ChatHistory Text Area
+		
 		ChatHistory = new JTextArea();
+		ChatHistory.setBounds(970, 71, 164, 531);
+		contentPane.add(ChatHistory);
 		ChatHistory.setLineWrap(true);
 		ChatHistory.setFont(new Font("Dialog", Font.PLAIN, 11));
 		ChatHistory.setEditable(false);
-		DefaultCaret caret = (DefaultCaret)ChatHistory.getCaret();
-		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 		
 		JScrollPane ChatScroll= new JScrollPane(ChatHistory);
-		ChatScroll.setBounds(720, 70, 164, 432);
+		ChatScroll.setBounds(970, 69, 164, 533);
 		contentPane.add(ChatScroll);
+		DefaultCaret caret = (DefaultCaret)ChatHistory.getCaret();
+		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 		
 		//ChatBox Text Field
 		ChatBox = new JTextField();
@@ -500,7 +577,7 @@ public class ClientGUI extends JFrame implements Runnable{
 				}
 			}
 		});
-		ChatBox.setBounds(720, 513, 164, 47);
+		ChatBox.setBounds(970, 613, 164, 47);
 		contentPane.add(ChatBox);
 		ChatBox.setColumns(10);
 		
@@ -510,15 +587,18 @@ public class ClientGUI extends JFrame implements Runnable{
 
 		mainCanvas = new JPanel();
 		mainCanvas.setBackground(new Color(247,247,242));
-		mainCanvas.setBounds(20, 70, 690, 490);
+		mainCanvas.setBounds(20, 70, 940, 590);
 		contentPane.add(mainCanvas);
 		mainCanvas.setLayout(null);
 		
-		System.out.println(System.getProperty("user.dir"));
 		mainCanvas.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				setCurrXY(e.getX(),e.getY());
+			}
+			@Override
+			public void mouseReleased(MouseEvent arg0) {
+				setCurrXY(0,0);
 			}
 		});
 		try {
@@ -549,7 +629,6 @@ public class ClientGUI extends JFrame implements Runnable{
 		timerWindow.setBounds(184, 12, 55, 47);
 		contentPane.add(timerWindow);
 		timerWindow.setColumns(10);
-		System.out.println("Width: "+timerWindow.WIDTH+" Height:"+timerWindow.HEIGHT);
 		
 		JButton readyBtn = new JButton("Ready");
 		readyBtn.setFont(new Font("Verdana", Font.PLAIN, 16));
@@ -562,7 +641,7 @@ public class ClientGUI extends JFrame implements Runnable{
 				client.sendMessage(("05"+client.getName()).getBytes());
 			}
 		});
-		readyBtn.setBounds(795, 12, 89, 47);
+		readyBtn.setBounds(970, 11, 164, 47);
 		contentPane.add(readyBtn);
 		
 		DrawerTurn = new JTextField();
@@ -570,7 +649,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		DrawerTurn.setBackground(new Color(255, 255, 255));
 		DrawerTurn.setEditable(false);
 		DrawerTurn.setFont(new Font("Segoe UI Semibold", Font.PLAIN, 17));
-		DrawerTurn.setBounds(545, 11, 109, 47);
+		DrawerTurn.setBounds(675, 12, 154, 47);
 		contentPane.add(DrawerTurn);
 		DrawerTurn.setColumns(10);
 		
@@ -578,7 +657,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		wordField.setFont(new Font("Dialog", Font.PLAIN, 20));
 		wordField.setEditable(false);
 		wordField.setBackground(new Color(255, 255, 255));
-		wordField.setBounds(249, 12, 286, 47);
+		wordField.setBounds(249, 11, 414, 47);
 		contentPane.add(wordField);
 		wordField.setColumns(10);
 		
@@ -588,7 +667,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		nextField.setEditable(false);
 		nextField.setColumns(10);
 		nextField.setBackground(Color.WHITE);
-		nextField.setBounds(664, 11, 121, 48);
+		nextField.setBounds(839, 11, 121, 48);
 		contentPane.add(nextField);
 		
 		scoreField = new JTextField();
@@ -600,7 +679,18 @@ public class ClientGUI extends JFrame implements Runnable{
 		scoreField.setBounds(20, 12, 154, 47);
 		contentPane.add(scoreField);
 		
+		AvatarPanel = new JPanel();
+		AvatarPanel.setBackground(Color.WHITE);
+		AvatarPanel.setBounds(1144, 12, 209, 648);
+		contentPane.add(AvatarPanel);
+		AvatarPanel.setLayout(new BorderLayout(0, 0));
+		
+		//ChatHistory Text Area
+		
+		
 	}
+	
+	
 	
 	//Setting initial x and y
 	public void setCurrXY(int x, int y){
@@ -614,47 +704,27 @@ public class ClientGUI extends JFrame implements Runnable{
 		int oldYsend=currYsend;
 		currXsend=x;
 		currYsend=y;
-		Point oldP = new Point(oldXsend+20,oldYsend+100);
-		Point p=new Point(x+20,y+100);
-		oldPoints.add(oldP);
-		points.add(p);
-		repaint();
-		String xAndy = "02"+oldXsend+","+oldYsend+","+x+","+y+","+client.getID();
+		Graphics g = mainCanvas.getGraphics();
+		g.drawLine(oldXsend, oldYsend, x, y);
+		String xAndy = "02"+oldXsend+","+oldYsend+","+x+","+y;
 		sendXY(xAndy);
 	}
-	
-	public void paint(Graphics g){
-		if(client.drawer){
-			g.setColor(Color.BLACK);
-			int i = 0;
-			System.out.println(points.size());
-		    while (i < points.size()-1) {
-		      Point p0 = (Point) (oldPoints.get(i++));
-		      Point p1 = (Point) (points.get(i++));
-		      int oldx = p0.x;
-		      int oldy = p0.y;
-		      int x = p1.x;
-		      int y = p1.y;
-		      g.drawLine(oldx, oldy, x, y);
-		    }
-		}else{
-			g.setColor(new Color(247,247,242));
-			g.fillRect(20, 100, mainCanvas.getWidth(), mainCanvas.getHeight());
-		}
-	}
-	
 	public void setCurrentWord(String currentWord) {
 		this.currentWord=currentWord;
 	}
 	
 	public void winWindow() {
 		JOptionPane winDialog= new JOptionPane("Win!");
-		winDialog.showMessageDialog(contentPane, "Correct!", "Winner!!", JOptionPane.PLAIN_MESSAGE);
-		winDialog.setVisible(true);
+		winDialog.showMessageDialog(contentPane,"Winner!!", "Correct!", JOptionPane.INFORMATION_MESSAGE);
 	}
 	//Timer seconds
 	public void setSeconds(int seconds){
 		this.seconds=seconds;
+	}
+	public void loseWindow(String word) {
+		JOptionPane loseDialog= new JOptionPane("Lose!");
+		loseDialog.showMessageDialog(contentPane, "The word was "+word,"Time's up" , JOptionPane.ERROR_MESSAGE);
+
 	}
 	public void closeCountdown() {
 		Timer timer = new Timer();

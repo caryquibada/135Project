@@ -94,6 +94,7 @@ public class Server extends JFrame implements Runnable{
 	public void parsePacket(DatagramPacket packet){
 		String message = new String(packet.getData());
 		String condition = message.substring(0,2);
+		String names;
 		switch(condition) {
 			case	"00":
 				int id = new SecureRandom().nextInt();
@@ -104,6 +105,11 @@ public class Server extends JFrame implements Runnable{
 				String ID = "00"+id;
 				sendMessage(ID.getBytes(), packet.getAddress(), packet.getPort());
 				logToServer("Client connected with IP: "+packet.getAddress());//Printing connecting client IP
+				names= "24";
+				for(int i=0;i<clientList.size();i++) {
+					names=names+clientList.get(i).getName()+"-"+clientList.get(i).score+"\t";
+				}
+				sendToDrawers(names);
 				break;
 			case	"01":
 				sendToDrawers(message);
@@ -128,6 +134,11 @@ public class Server extends JFrame implements Runnable{
 					}
 				}
 				logToServer(message.substring(2).trim()+" has disconnected!");
+				names= "24";
+				for(int i=0;i<clientList.size();i++) {
+					names=names+clientList.get(i).getName()+"-"+clientList.get(i).score+"\t";
+				}
+				sendToDrawers(names);
 				break;
 			case	"05":
 				String nameReady=message.substring(2).trim();
@@ -163,7 +174,6 @@ public class Server extends JFrame implements Runnable{
 					String currGuesser=players.get(players.size()-1);
 					sendToDrawers("14"+currGuesser);
 					currGuess=0;
-					System.out.println("11");
 				}
 				currGuess++;
 				break;
@@ -171,7 +181,6 @@ public class Server extends JFrame implements Runnable{
 				if(guessThreshold==players.size()){
 					getGuesser();
 					guessThreshold=0;
-					System.out.println("12");
 				}
 				guessThreshold++;
 				break;
@@ -190,6 +199,7 @@ public class Server extends JFrame implements Runnable{
 						clientList.get(i).score=Integer.parseInt(scores[1]);
 					}
 				}
+				
 				break;
 			case	"19":
 				if(scoreCount==players.size()) {
@@ -198,6 +208,11 @@ public class Server extends JFrame implements Runnable{
 						scoreList=scoreList+clientList.get(i).getName()+"-"+clientList.get(i).score+"\n";
 					}
 					sendToDrawers(scoreList);
+					names="24";
+					for(int i=0;i<clientList.size();i++) {
+						names=names+clientList.get(i).getName()+"-"+clientList.get(i).score+"\t";
+					}
+					sendToDrawers(names);
 				}
 				scoreCount++;
 				break;
@@ -221,7 +236,6 @@ public class Server extends JFrame implements Runnable{
 					int max=Collections.max(voteScore);
 					String voteWinners="23";
 					for(int i=0;i<voteScore.size();i++) {
-						System.out.println("Passed 22");
 						if(voteScore.get(i)==max) {
 							voteWinners=voteWinners+players.get(i)+"\t";
 						}
@@ -285,7 +299,6 @@ public class Server extends JFrame implements Runnable{
 		sendToDrawers("03ClearBoard");
 		sendToDrawers("07"+players.get(0));
 		logToServer(players.get(0));
-		System.out.println("Current guesser: "+players.get(0));
 		String drawers="08";
 		voteScore.clear();
 		for(int i=1;i<players.size();i++){
@@ -310,23 +323,11 @@ public class Server extends JFrame implements Runnable{
 	/*Iterating through client list to pass message to all clients*/
 	public void sendToDrawers(String message){
 		//If user is painting, he/she will not receive the coordinates for his/her painting
-		if(message.startsWith("02")){ 
-			String[] canvasInfo=message.split(",");
-			int userID=Integer.parseInt(canvasInfo[4].trim());
-			for(int i=0;i<clientList.size();i++){
-				ClientStorage client = clientList.get(i);
-				if(userID!=client.getID()||client.drawer){
-					message=message.trim();
-					sendMessage(message.getBytes(),client.address,client.port);
-				}
-			}
-		}else{
-			for(int i=0;i<clientList.size();i++){
-				ClientStorage client = clientList.get(i);
-				if(client.drawer){
-					message=message.trim();
-					sendMessage(message.getBytes(),client.address,client.port);
-				}
+		for(int i=0;i<clientList.size();i++){
+			ClientStorage client = clientList.get(i);
+			if(client.drawer){
+				message=message.trim();
+				sendMessage(message.getBytes(),client.address,client.port);
 			}
 		}
 	}
@@ -401,6 +402,10 @@ public class Server extends JFrame implements Runnable{
 			commandLine.setText("");
 		}else if(command.equals("/listplayers")){
 			logToServer("Players Online"+listPlayers());
+			commandLine.setText("");
+		}else if(command.equals("/clear")) {
+			sendToDrawers("03");
+			logToServer("Board Cleared!");
 			commandLine.setText("");
 		}else{
 			logToServer("Command Unknown");

@@ -4,40 +4,54 @@
  * Github,Youtube. (2014). Cherno Chat. [online] Available at: https://github.com/TheCherno/ChernoChat/tree/master/src/com/thecherno/chernochat, https://www.youtube.com/user/TheChernoProject [Accessed 24 Sep. 2018].*/
 
 import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Image;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
+
+import org.omg.CORBA.portable.InputStream;
+
 import java.awt.Color;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
 public class LoginGUI extends JFrame {
 
-	private JPanel contentPane;
+	public JPanel contentPane;
 	private JTextField NameField;
 	private JTextField IPField;
 	private JTextField PortField;
 	private JLabel lblIpAddress;
 	private JLabel lblPort;
 	private JTextField WordField;
+	public JPanel panel;
 	public LoginGUI() throws UnknownHostException {
-		
+		buildWindow();
+	}
+	
+	public void buildWindow() {
 		setBackground(new Color(255, 255, 255));
 		setForeground(new Color(255, 255, 255));
 		setResizable(false);
 		setTitle("Login");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 266, 324);
+		setBounds(0, 0, 1150, 700);
 		contentPane = new JPanel();
-		
+		contentPane.setVisible(true);
 		contentPane.setBackground(new Color(255, 255, 255));
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -45,25 +59,35 @@ public class LoginGUI extends JFrame {
 		//Name text field
 		NameField = new JTextField();
 		NameField.setFont(new Font("Arial", Font.PLAIN, 18));
-		NameField.setBounds(115, 11, 130, 38);
+		NameField.setBounds(567, 402, 130, 38);
 		contentPane.add(NameField);
 		NameField.setColumns(10);
 		JLabel lblName = new JLabel("Name:");
 		lblName.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		lblName.setBounds(10, 20, 91, 14);
+		lblName.setBounds(462, 413, 91, 14);
 		contentPane.add(lblName);
+		
+		
 		
 		//IP text field
 		IPField = new JTextField();
 		IPField.setFont(new Font("Arial", Font.PLAIN, 15));
-		String[] IP = InetAddress.getLocalHost().toString().split("/");
-		IPField.setText(IP[1]);
+		String[] IP;
+		try {
+			IP = InetAddress.getLocalHost().toString().split("/");
+			IPField.setText(IP[1]);
+		} catch (UnknownHostException e) {
+			
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		IPField.setColumns(10);
-		IPField.setBounds(115, 109, 130, 44);
+		IPField.setBounds(567, 500, 130, 44);
 		contentPane.add(IPField);
 		lblIpAddress = new JLabel("IP Address:");
 		lblIpAddress.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		lblIpAddress.setBounds(10, 122, 151, 14);
+		lblIpAddress.setBounds(462, 513, 151, 14);
 		contentPane.add(lblIpAddress);
 		
 		//Port text field
@@ -71,22 +95,22 @@ public class LoginGUI extends JFrame {
 		PortField.setFont(new Font("Arial", Font.PLAIN, 14));
 		PortField.setText("3000");
 		PortField.setColumns(10);
-		PortField.setBounds(115, 164, 130, 44);
+		PortField.setBounds(567, 555, 130, 44);
 		contentPane.add(PortField);
 		lblPort = new JLabel("Port:");
 		lblPort.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		lblPort.setBounds(10, 176, 130, 14);
+		lblPort.setBounds(462, 567, 130, 14);
 		contentPane.add(lblPort);
 		
 		//Desired word text field
 		WordField = new JTextField();
 		WordField.setFont(new Font("Arial", Font.PLAIN, 14));
 		WordField.setColumns(10);
-		WordField.setBounds(115, 60, 130, 38);
+		WordField.setBounds(567, 451, 130, 38);
 		contentPane.add(WordField);
 		JLabel lblWord = new JLabel("Your word:");
 		lblWord.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		lblWord.setBounds(10, 69, 130, 14);
+		lblWord.setBounds(462, 460, 130, 14);
 		contentPane.add(lblWord);
 		
 		//LOGIN button
@@ -104,15 +128,23 @@ public class LoginGUI extends JFrame {
 			}
 		});
 		LoginBTN.setFont(new Font("Yu Gothic UI", Font.BOLD, 26));
-		LoginBTN.setBounds(10, 219, 235, 61);
+		LoginBTN.setBounds(462, 610, 235, 61);
 		contentPane.add(LoginBTN);
 		
+		panel = new JPanel();
+		panel.setBackground(Color.WHITE);
+		panel.setBounds(0, 0, 1144, 391);
+		contentPane.add(panel);
+	} 
+	public void showTitle() {
+		Graphics g=panel.getGraphics();
 		
-		
+		Image img = new ImageIcon("Images/title.png").getImage();
+		g.drawImage(img, 0, 0, null);
 	}
 	//Calling the ClientGUI class
 	public void login(String name, String IPAddress, int port,String word){
 		dispose();
-		ClientGUI client = new ClientGUI(name,IPAddress,port,word);
+		new AvatarWindow(name,IPAddress,port,word);
 	}
 }
