@@ -1,3 +1,4 @@
+package com.QuickDraw;
 /*Code and structure for chat, client storage and handling login from user "TheChernoProject" on Youtube
  * Youtube Channel: https://www.youtube.com/user/TheChernoProject
  * Github Repo: https://github.com/TheCherno/ChernoChat/tree/master/com/thecherno/chernochat 
@@ -23,6 +24,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.DefaultCaret;
 
@@ -36,6 +38,7 @@ import java.awt.event.MouseEvent;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 
@@ -43,13 +46,18 @@ import java.awt.event.MouseAdapter;
 import java.awt.Font;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.DatagramPacket;
 
 import javax.swing.SwingConstants;
 import javax.swing.JTextPane;
 import javax.swing.UIManager;
 import java.awt.BorderLayout;
+import javax.swing.border.LineBorder;
 
 public class ClientGUI extends JFrame implements Runnable{
 
@@ -67,7 +75,7 @@ public class ClientGUI extends JFrame implements Runnable{
     private JTextField timerWindow;
     private JTextField DrawerTurn;
     private JTextField wordField;
-    private String guesser,currentWord="";
+    private String guesser,currentWord="",latestDrawer;
     private JLayeredPane panel;
     private Image img;
     private List<Point> points = new ArrayList<Point>();
@@ -77,7 +85,7 @@ public class ClientGUI extends JFrame implements Runnable{
     private String[] drawers;
     private AvatarWindow avatar;
     private JPanel AvatarPanel;
-    private List<JPanel> panels= new ArrayList<JPanel>();
+    private List<JLabel> panels= new ArrayList<JLabel>();
     private List<String> names = new ArrayList<String>();
     private List<JLabel> labels = new ArrayList<JLabel>();
 	public ClientGUI(String name,String IPAddress, int port,String word){
@@ -86,7 +94,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent arg0) {
-				File avatar= new File("Images/"+client.getName()+".png");
+				File avatar= new File("resources/Images/"+client.getName()+".png");
 				avatar.delete();
 				String disconnectMessage="04"+name;
 				client.sendMessage(disconnectMessage.getBytes());
@@ -130,23 +138,34 @@ public class ClientGUI extends JFrame implements Runnable{
 		constantReceive = new Thread("constantReceive"){
 			public void run(){
 				while(clientRunning){
-					String message=client.receive();
-					
-					parseMessage(message);
+					DatagramPacket message=client.receive();
+					try {
+						parseMessage(message);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			}
 		};
 		constantReceive.start();
 	}
 	//Different prefixes are assigned to different server responses
-	public void parseMessage(String message){
-		
+	public void parseMessage(DatagramPacket msg) throws IOException{
+		String message = new String(msg.getData());
 		String condition=message.substring(0, 2);
 		switch(condition) {
 			case	"00":
 				client.setID(Integer.parseInt(message.substring(3,message.length()).trim()));
-				
+				BufferedImage img1 = ImageIO.read(new File("resources/Images/"+client.getName()+".png"));
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				ImageIO.write(img1, "png", baos);
+				baos.flush();
+				byte[] buffer  = baos.toByteArray();
+				System.out.println(buffer.toString());
+				client.sendMessage(buffer);
 				sendPacket(client.getName()+" has connected");
+				
 				break;
 			case	"01":
 				String[] chatMessage=message.split(":");
@@ -165,6 +184,11 @@ public class ClientGUI extends JFrame implements Runnable{
 						printToChat(message);
 					}
 				}else {
+					if(message.endsWith("has connected")) {
+						String[] temp=message.split(" ");
+						latestDrawer = temp[0];
+					}
+						
 					printToChat(message);
 				}
 				break;
@@ -279,6 +303,7 @@ public class ClientGUI extends JFrame implements Runnable{
 				scoreField.setText("Your score: "+client.score );
 				client.sendMessage(("18"+client.getName()+"-"+client.score).getBytes());
 				client.sendMessage("19".getBytes());
+				break;
 			case	"24":
 				String[] namesSplit=message.substring(2).trim().split("\t");
 				names.clear();
@@ -286,30 +311,36 @@ public class ClientGUI extends JFrame implements Runnable{
 				labels.clear();
 				for(int i=0;i<namesSplit.length;i++) {
 					names.add(namesSplit[i]);
-					panels.add(new JPanel());
+					panels.add(new JLabel());
 					labels.add(new JLabel(names.get(i)));
-					panels.get(i).setBounds(0, 0+((AvatarPanel.getHeight()/6)*i),AvatarPanel.getWidth(), (AvatarPanel.getHeight())/6);
-					AvatarPanel.add(panels.get(i));
 				}
 				updatePanels();
-			default:
 				break;
+			default:
+				System.out.println(condition);
+				byte[] input=msg.getData();
+			    ByteArrayInputStream input_stream= new ByteArrayInputStream(input);
+			    BufferedImage img = ImageIO.read(input_stream);
+			    String[] lastName = names.get(names.size()-1).split("-");
+			    ImageIO.write(img, "png", new File("resources/Images/"+lastName[0]+".png"));
+			    break;
 		}
 	}
 	
 	public void updatePanels() {
 		AvatarPanel.removeAll();
 		for(int i=0;i<panels.size();i++) {
-			System.out.println(panels.size());
+			panels.get(i).setBounds(0, 0+((AvatarPanel.getHeight()/6)*i),AvatarPanel.getWidth(), (AvatarPanel.getHeight())/6);
+			AvatarPanel.add(panels.get(i));
 			panels.get(i).add(labels.get(i));
+			panels.get(i).setBorder(new LineBorder(new Color(0, 0, 0), 1, true));
 			labels.get(i).setBounds(AvatarPanel.getHeight()/6,0,AvatarPanel.getWidth()-(AvatarPanel.getHeight()/6),AvatarPanel.getHeight()/6);
 			String[] filename=names.get(i).trim().split("-");
 			Image img;
 			try {
-				img = ImageIO.read(new File("Images/"+filename[0]+".png"));
-				img =img.getScaledInstance(panels.get(i).getHeight(),panels.get(i).getHeight(),Image.SCALE_SMOOTH);
-				panels.get(i).getGraphics().drawImage(img, 0, 0, null);
-				
+				img=ImageIO.read(new File("resources/Images/"+filename[0]+".png")); 
+				img=img.getScaledInstance(panels.get(i).getHeight(),panels.get(i).getHeight(),Image.SCALE_SMOOTH);
+				panels.get(i).setIcon(new ImageIcon(img));
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -360,7 +391,7 @@ public class ClientGUI extends JFrame implements Runnable{
 					case	0:
 						Image img0;
 						try {
-							img0 = ImageIO.read(new File("Images/0.png"));
+							img0 = ImageIO.read(new File("resources/Images/0.png"));
 							g.drawImage(img0, 0, 0, null);
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
@@ -370,7 +401,7 @@ public class ClientGUI extends JFrame implements Runnable{
 					case	1:
 						Image img1;
 						try {
-							img1 = ImageIO.read(new File("Images/1.png"));
+							img1 = ImageIO.read(new File("resources/Images/1.png"));
 							g.drawImage(img1, 0, 0, null);
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
@@ -380,7 +411,7 @@ public class ClientGUI extends JFrame implements Runnable{
 					case	2:
 						Image img2;
 						try {
-							img2 = ImageIO.read(new File("Images/2.png"));
+							img2 = ImageIO.read(new File("resources/Images/2.png"));
 							g.drawImage(img2, 0, 0, null);
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
@@ -390,7 +421,7 @@ public class ClientGUI extends JFrame implements Runnable{
 					case	3:
 						Image img3;
 						try {
-							img3 = ImageIO.read(new File("Images/3.png"));
+							img3 = ImageIO.read(new File("resources/Images/3.png"));
 							g.drawImage(img3, 0, 0, null);
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
@@ -400,7 +431,7 @@ public class ClientGUI extends JFrame implements Runnable{
 					case	4:
 						Image img4;
 						try {
-							img4 = ImageIO.read(new File("Images/4.png"));
+							img4 = ImageIO.read(new File("resources/Images/4.png"));
 							g.drawImage(img4, 0, 0, null);
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
@@ -410,7 +441,7 @@ public class ClientGUI extends JFrame implements Runnable{
 					case	5:
 						Image img5;
 						try {
-							img5 = ImageIO.read(new File("Images/5.png"));
+							img5 = ImageIO.read(new File("resources/Images/5.png"));
 							g.drawImage(img5, 0, 0, null);
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
@@ -420,7 +451,7 @@ public class ClientGUI extends JFrame implements Runnable{
 					case	6:
 						Image img6;
 						try {
-							img6 = ImageIO.read(new File("Images/6.png"));
+							img6 = ImageIO.read(new File("resources/Images/6.png"));
 							g.drawImage(img6, 0, 0, null);
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
@@ -430,7 +461,7 @@ public class ClientGUI extends JFrame implements Runnable{
 					case	7:
 						Image img7;
 						try {
-							img7 = ImageIO.read(new File("Images/7.png"));
+							img7 = ImageIO.read(new File("resources/Images/7.png"));
 							g.drawImage(img7, 0, 0, null);
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
@@ -440,7 +471,7 @@ public class ClientGUI extends JFrame implements Runnable{
 					case	8:
 						Image img8;
 						try {
-							img8 = ImageIO.read(new File("Images/8.png"));
+							img8 = ImageIO.read(new File("resources/Images/8.png"));
 							g.drawImage(img8, 0, 0, null);
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
@@ -450,7 +481,7 @@ public class ClientGUI extends JFrame implements Runnable{
 					case	9:
 						Image img9;
 						try {
-							img9 = ImageIO.read(new File("Images/9.png"));
+							img9 = ImageIO.read(new File("resources/Images/9.png"));
 							g.drawImage(img9, 0, 0, null);
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
@@ -460,7 +491,7 @@ public class ClientGUI extends JFrame implements Runnable{
 					case	10:
 						Image img10;
 						try {
-							img10 = ImageIO.read(new File("Images/10.png"));
+							img10 = ImageIO.read(new File("resources/Images/10.png"));
 							g.drawImage(img10, 0, 0, null);
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
@@ -500,7 +531,7 @@ public class ClientGUI extends JFrame implements Runnable{
 					drawTime=allSeconds;
 					Image clear;
 					try {
-						clear = ImageIO.read(new File("Images/clear.png"));
+						clear = ImageIO.read(new File("resources/Images/clear.png"));
 						g.drawImage(clear, 0, 0, null);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -563,7 +594,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		ChatHistory.setEditable(false);
 		
 		JScrollPane ChatScroll= new JScrollPane(ChatHistory);
-		ChatScroll.setBounds(970, 69, 164, 533);
+		ChatScroll.setBounds(1189, 70, 164, 533);
 		contentPane.add(ChatScroll);
 		DefaultCaret caret = (DefaultCaret)ChatHistory.getCaret();
 		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
@@ -577,7 +608,7 @@ public class ClientGUI extends JFrame implements Runnable{
 				}
 			}
 		});
-		ChatBox.setBounds(970, 613, 164, 47);
+		ChatBox.setBounds(1189, 613, 164, 47);
 		contentPane.add(ChatBox);
 		ChatBox.setColumns(10);
 		
@@ -587,7 +618,8 @@ public class ClientGUI extends JFrame implements Runnable{
 
 		mainCanvas = new JPanel();
 		mainCanvas.setBackground(new Color(247,247,242));
-		mainCanvas.setBounds(20, 70, 940, 590);
+		mainCanvas.setBounds(239, 70, 940, 590);
+		mainCanvas.setBorder(new BevelBorder(BevelBorder.LOWERED));
 		contentPane.add(mainCanvas);
 		mainCanvas.setLayout(null);
 		
@@ -602,13 +634,13 @@ public class ClientGUI extends JFrame implements Runnable{
 			}
 		});
 		try {
-			img = ImageIO.read(new File("Images/pencil.png"));
+			img = ImageIO.read(new File("resources/Images/pencil.png"));
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		Toolkit toolkit = Toolkit.getDefaultToolkit();
-		Image image = toolkit.getImage("Images/pencil.png");
+		Image image = toolkit.getImage("resources/Images/pencil.png");
 		Cursor c = toolkit.createCustomCursor(image , new Point(contentPane.getX(), 
 		           contentPane.getY()), "img");
 		contentPane.setCursor (c);
@@ -626,7 +658,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		timerWindow.setBackground(new Color(245, 255, 250));
 		timerWindow.setEditable(false);
 		timerWindow.setFont(new Font("Oxygen", Font.BOLD, 18));
-		timerWindow.setBounds(184, 12, 55, 47);
+		timerWindow.setBounds(405, 12, 55, 47);
 		contentPane.add(timerWindow);
 		timerWindow.setColumns(10);
 		
@@ -641,7 +673,7 @@ public class ClientGUI extends JFrame implements Runnable{
 				client.sendMessage(("05"+client.getName()).getBytes());
 			}
 		});
-		readyBtn.setBounds(970, 11, 164, 47);
+		readyBtn.setBounds(1189, 12, 164, 47);
 		contentPane.add(readyBtn);
 		
 		DrawerTurn = new JTextField();
@@ -649,7 +681,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		DrawerTurn.setBackground(new Color(255, 255, 255));
 		DrawerTurn.setEditable(false);
 		DrawerTurn.setFont(new Font("Segoe UI Semibold", Font.PLAIN, 17));
-		DrawerTurn.setBounds(675, 12, 154, 47);
+		DrawerTurn.setBounds(894, 12, 154, 47);
 		contentPane.add(DrawerTurn);
 		DrawerTurn.setColumns(10);
 		
@@ -657,7 +689,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		wordField.setFont(new Font("Dialog", Font.PLAIN, 20));
 		wordField.setEditable(false);
 		wordField.setBackground(new Color(255, 255, 255));
-		wordField.setBounds(249, 11, 414, 47);
+		wordField.setBounds(470, 11, 414, 47);
 		contentPane.add(wordField);
 		wordField.setColumns(10);
 		
@@ -667,7 +699,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		nextField.setEditable(false);
 		nextField.setColumns(10);
 		nextField.setBackground(Color.WHITE);
-		nextField.setBounds(839, 11, 121, 48);
+		nextField.setBounds(1058, 11, 121, 48);
 		contentPane.add(nextField);
 		
 		scoreField = new JTextField();
@@ -676,15 +708,15 @@ public class ClientGUI extends JFrame implements Runnable{
 		scoreField.setEditable(false);
 		scoreField.setColumns(10);
 		scoreField.setBackground(Color.WHITE);
-		scoreField.setBounds(20, 12, 154, 47);
+		scoreField.setBounds(241, 12, 154, 47);
 		contentPane.add(scoreField);
 		
 		AvatarPanel = new JPanel();
+		AvatarPanel.setBorder(new LineBorder(new Color(0, 0, 0), 1, true));
 		AvatarPanel.setBackground(Color.WHITE);
-		AvatarPanel.setBounds(1144, 12, 209, 648);
+		AvatarPanel.setBounds(10, 12, 209, 648);
+		AvatarPanel.setLayout(null);
 		contentPane.add(AvatarPanel);
-		AvatarPanel.setLayout(new BorderLayout(0, 0));
-		
 		//ChatHistory Text Area
 		
 		
@@ -734,6 +766,8 @@ public class ClientGUI extends JFrame implements Runnable{
 				printToChat("01"+countdown+"");
 				countdown--;
 				if(countdown==0) {
+					File delete = new File("resources/Images/"+client.getName()+".png");
+					delete.delete();
 					System.exit(0);
 					timer.cancel();
 				}

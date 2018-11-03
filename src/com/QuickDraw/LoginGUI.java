@@ -1,3 +1,4 @@
+package com.QuickDraw;
 /*Code and structure for chat, client storage and handling login from user "TheChernoProject" on Youtube
  * Youtube Channel: https://www.youtube.com/user/TheChernoProject
  * Github Repo: https://github.com/TheCherno/ChernoChat/tree/master/src/com/thecherno/chernochat 
@@ -38,12 +39,13 @@ public class LoginGUI extends JFrame {
 	private JLabel lblIpAddress;
 	private JLabel lblPort;
 	private JTextField WordField;
-	public JPanel panel;
-	public LoginGUI() throws UnknownHostException {
+	public JLabel bannerField;
+	private ImageIcon banner;
+	public LoginGUI() throws IOException {
 		buildWindow();
 	}
 	
-	public void buildWindow() {
+	public void buildWindow() throws IOException {
 		setBackground(new Color(255, 255, 255));
 		setForeground(new Color(255, 255, 255));
 		setResizable(false);
@@ -130,18 +132,13 @@ public class LoginGUI extends JFrame {
 		LoginBTN.setFont(new Font("Yu Gothic UI", Font.BOLD, 26));
 		LoginBTN.setBounds(462, 610, 235, 61);
 		contentPane.add(LoginBTN);
-		
-		panel = new JPanel();
-		panel.setBackground(Color.WHITE);
-		panel.setBounds(0, 0, 1144, 391);
-		contentPane.add(panel);
+		BufferedImage img = ImageIO.read(new File("resources/Images/title.png"));
+		banner = new ImageIcon(img);
+		System.out.println(banner);
+		bannerField = new JLabel(banner);
+		bannerField.setBounds(0, 0, 1144, 391);
+		contentPane.add(bannerField);
 	} 
-	public void showTitle() {
-		Graphics g=panel.getGraphics();
-		
-		Image img = new ImageIcon("Images/title.png").getImage();
-		g.drawImage(img, 0, 0, null);
-	}
 	//Calling the ClientGUI class
 	public void login(String name, String IPAddress, int port,String word){
 		dispose();

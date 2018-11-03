@@ -1,3 +1,4 @@
+package com.QuickDraw;
 /*Code and structure for chat, client storage and handling login from user "TheChernoProject" on Youtube
  * Youtube Channel: https://www.youtube.com/user/TheChernoProject
  * Github Repo: https://github.com/TheCherno/ChernoChat/tree/master/src/com/thecherno/chernochat 

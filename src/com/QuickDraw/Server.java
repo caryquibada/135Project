@@ -1,9 +1,13 @@
+package com.QuickDraw;
 /*Code and structure for chat, client storage and handling login from user "TheChernoProject" on Youtube
  * Youtube Channel: https://www.youtube.com/user/TheChernoProject
  * Github Repo: https://github.com/TheCherno/ChernoChat/tree/master/src/com/thecherno/chernochat 
  * Github,Youtube. (2014). Cherno Chat. [online] Available at: https://github.com/TheCherno/ChernoChat/tree/master/src/com/thecherno/chernochat, https://www.youtube.com/user/TheChernoProject [Accessed 24 Sep. 2018].*/
 
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -17,6 +21,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import javax.imageio.ImageIO;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -29,12 +34,13 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 
 import javax.swing.JScrollPane;
 
 public class Server extends JFrame implements Runnable{
 	
-	private List<ClientStorage> clientList = new ArrayList<ClientStorage>();
+	public List<ClientStorage> clientList = new ArrayList<ClientStorage>();
 	public List<String> words= new ArrayList<String>();
 	public List<String> players = new ArrayList<String>();
 	private List<Integer> voteScore = new ArrayList<Integer>();
@@ -77,21 +83,26 @@ public class Server extends JFrame implements Runnable{
 		receive = new Thread("Receive Message"){
 			public void run(){
 				while(serverRunning){
-					byte[] data = new byte[128];
+					byte[] data = new byte[4096];
 					DatagramPacket receivePacket = new DatagramPacket(data,data.length);
 					try {
 						socket.receive(receivePacket);
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
-					parsePacket(receivePacket);
+					try {
+						parsePacket(receivePacket);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			}
 		};
 		receive.start();
 	}
 	/*Parsing the packet being received*/
-	public void parsePacket(DatagramPacket packet){
+	public void parsePacket(DatagramPacket packet) throws IOException{
 		String message = new String(packet.getData());
 		String condition = message.substring(0,2);
 		String names;
@@ -213,6 +224,7 @@ public class Server extends JFrame implements Runnable{
 						names=names+clientList.get(i).getName()+"-"+clientList.get(i).score+"\t";
 					}
 					sendToDrawers(names);
+					scoreCount=0;
 				}
 				scoreCount++;
 				break;
@@ -248,6 +260,17 @@ public class Server extends JFrame implements Runnable{
 				voteThresh++;
 				break;
 			default: 
+				byte[] input=packet.getData();
+			    ByteArrayInputStream input_stream= new ByteArrayInputStream(input);
+			    BufferedImage final_buffered_image = ImageIO.read(input_stream);
+			    ImageIO.write(final_buffered_image , "png", new File("resources/Images/test.png") );
+			    
+			    BufferedImage img = ImageIO.read(new File("resources/Images/test.png"));
+			    ByteArrayOutputStream output = new ByteArrayOutputStream();
+			    ImageIO.write(img, "png", output);
+			    output.flush();
+			    byte[] out = output.toByteArray();
+			    sendBytesToDrawers(out);
 				break;
 		}
 	}
@@ -329,6 +352,14 @@ public class Server extends JFrame implements Runnable{
 				message=message.trim();
 				sendMessage(message.getBytes(),client.address,client.port);
 			}
+		}
+	}
+	
+	public void sendBytesToDrawers(byte[] message){
+		//If user is painting, he/she will not receive the coordinates for his/her painting
+		for(int i=0;i<clientList.size();i++){
+			ClientStorage client = clientList.get(i);
+			sendMessage(message,client.address,client.port);
 		}
 	}
 	/*Removing client from array list when client is disconnecting*/
@@ -424,9 +455,6 @@ public class Server extends JFrame implements Runnable{
 		}
 		return players;
 	}
-	
-	
-	
 	public void logToServer(String message){
 		responseLog.setText(responseLog.getText()+"\n"+message);
 	}

@@ -1,3 +1,4 @@
+package com.QuickDraw;
 import java.awt.EventQueue;
 import java.net.UnknownHostException;
 import java.util.Scanner;

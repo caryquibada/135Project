@@ -1,3 +1,4 @@
+package com.QuickDraw;
 /*Code and structure for chat, client storage and handling login from user "TheChernoProject" on Youtube
  * Youtube Channel: https://www.youtube.com/user/TheChernoProject
  * Github Repo: https://github.com/TheCherno/ChernoChat/tree/master/src/com/thecherno/chernochat 
@@ -76,20 +77,19 @@ public class Client {
 	}
 	
 	/*Receiving a message from the server*/
-	public String receive(){
-		byte[] data = new byte[128];
+	public DatagramPacket receive(){
+		byte[] data = new byte[4096];
 		DatagramPacket receivePacket = new DatagramPacket(data,data.length);
 		try {
 			socket.receive(receivePacket);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		String message = new String(receivePacket.getData());
-		return message;
+		return receivePacket;
 	}
 	
 	/*Sending a message to the server*/
-	public void sendMessage(final byte[] data){
+	public void sendMessage(byte[] data){
 		DatagramPacket sendPacket = new DatagramPacket(data,data.length,IP,port);
 		try{
 			socket.send(sendPacket);

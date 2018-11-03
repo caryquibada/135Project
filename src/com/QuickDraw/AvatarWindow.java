@@ -1,3 +1,4 @@
+package com.QuickDraw;
 import javax.swing.JFrame;
 
 import java.awt.Graphics;
@@ -14,6 +15,7 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 import javax.swing.JButton;
+import javax.swing.JDialog;
 
 import java.awt.AWTException;
 import java.awt.Color;
@@ -55,10 +57,9 @@ public class AvatarWindow extends JFrame {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				try {
-					System.out.println(panel.getSize());
 					Rectangle screenRect = new Rectangle(panel.getSize());
 					BufferedImage capture = new Robot().createScreenCapture(screenRect);
-					ImageIO.write(capture, "png", new File("Images/"+name+".png"));
+					ImageIO.write(capture, "png", new File("resources/Images/"+name+".png"));
 					startClient(name,IPAddress,port,word);
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
@@ -83,15 +84,6 @@ public class AvatarWindow extends JFrame {
 		});
 		btnClear.setBounds(352, 439, 64, 23);
 		getContentPane().add(btnClear);
-		
-		
-		
-
-		
-	}
-	
-	public void saveImage() throws IOException {
-		
 	}
 	public void startClient(String name,String IPAddress,int port, String word) {
 		dispose();
