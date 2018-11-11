@@ -36,6 +36,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.awt.event.MouseEvent;
 
+import javax.imageio.IIOException;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -67,7 +68,7 @@ public class ClientGUI extends JFrame implements Runnable{
 	private Client client;
 	private Thread constantReceive;
 	private Thread run;
-	private boolean clientRunning=false,correct=false;
+	private boolean clientRunning=false,correct=false,error=false;
 	private int ID=0,seconds=0,defSeconds,drawTime=100,allSeconds;
 	private int currXsend,currYsend,currXreceive,currYreceive;
     private JPanel mainCanvas,coverPanel;
@@ -98,7 +99,10 @@ public class ClientGUI extends JFrame implements Runnable{
 				avatar.delete();
 				String disconnectMessage="04"+name;
 				client.sendMessage(disconnectMessage.getBytes());
-				updatePanels();
+				error=true;
+				while(error) {
+					updatePanels();
+				}
 			}
 		});
 		showWindow();
@@ -328,7 +332,11 @@ public class ClientGUI extends JFrame implements Runnable{
 					panels.add(new JLabel());
 					labels.add(new JLabel(names.get(i)));
 				}
-				updatePanels();
+				error=true;
+				while(error) {
+					updatePanels();
+				}
+					
 				break;
 			default:
 				byte[] input=msg.getData();
@@ -355,12 +363,17 @@ public class ClientGUI extends JFrame implements Runnable{
 				img=ImageIO.read(new File("resources/Images/"+filename[0]+".png")); 
 				img=img.getScaledInstance(panels.get(i).getHeight(),panels.get(i).getHeight(),Image.SCALE_SMOOTH);
 				panels.get(i).setIcon(new ImageIcon(img));
+			} catch (IIOException e) {
+				error=true;
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			}catch(IndexOutOfBoundsException e) {
+				error=true;
 			}
 			
 		}
+		error=false;
 	}
 	
 	public void showVoting() {
@@ -389,6 +402,7 @@ public class ClientGUI extends JFrame implements Runnable{
 	
 	//Countdown Timer
 	public void countDown(){
+		ChatHistory.setText("");
 		client.sendMessage("10Draw".getBytes()); //Draw Turn
 		Timer timer = new Timer();
 		setSeconds(allSeconds);

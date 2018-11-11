@@ -263,9 +263,10 @@ public class Server extends JFrame implements Runnable{
 				byte[] input=packet.getData();
 			    ByteArrayInputStream input_stream= new ByteArrayInputStream(input);
 			    BufferedImage final_buffered_image = ImageIO.read(input_stream);
-			    ImageIO.write(final_buffered_image , "png", new File("resources/Images/test.png") );
+			    String filename=clientList.get(clientList.size()-1).getName();
+			    ImageIO.write(final_buffered_image , "png", new File("resources/Images/"+filename+".png") );
 			    
-			    BufferedImage img = ImageIO.read(new File("resources/Images/test.png"));
+			    BufferedImage img = ImageIO.read(new File("resources/Images/"+filename+".png"));
 			    ByteArrayOutputStream output = new ByteArrayOutputStream();
 			    ImageIO.write(img, "png", output);
 			    output.flush();
