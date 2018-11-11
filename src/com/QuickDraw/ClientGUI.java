@@ -98,6 +98,7 @@ public class ClientGUI extends JFrame implements Runnable{
 				avatar.delete();
 				String disconnectMessage="04"+name;
 				client.sendMessage(disconnectMessage.getBytes());
+				updatePanels();
 			}
 		});
 		showWindow();
@@ -177,8 +178,10 @@ public class ClientGUI extends JFrame implements Runnable{
 							String win="15Win";
 							client.sendMessage(win.getBytes());
 							seconds=1;
-						}else {
+						}else if(allSeconds!=seconds){
 							printToChat("01Incorrect!");
+						}else {
+							printToChat(message);
 						}
 					}else {
 						printToChat(message);
@@ -188,7 +191,6 @@ public class ClientGUI extends JFrame implements Runnable{
 						String[] temp=message.split(" ");
 						latestDrawer = temp[0];
 					}
-						
 					printToChat(message);
 				}
 				break;
@@ -293,9 +295,13 @@ public class ClientGUI extends JFrame implements Runnable{
 				for(int i=0;i<winners.length;i++) {
 					if(winners[i].equals(client.getName())) {
 						if(correct) {
+							JOptionPane winVoteDialog= new JOptionPane("Most votes!");
+							winVoteDialog.showMessageDialog(contentPane, "You have been voted as the best drawer!");
 							correct=false;
 							client.score++;
 						}else {
+							JOptionPane loseVoteDialog= new JOptionPane("Most votes!");
+							loseVoteDialog.showMessageDialog(contentPane, "You have been voted as the worst drawer!");
 							client.score--;
 						}
 					}
@@ -317,12 +323,12 @@ public class ClientGUI extends JFrame implements Runnable{
 				updatePanels();
 				break;
 			default:
-				System.out.println(condition);
 				byte[] input=msg.getData();
 			    ByteArrayInputStream input_stream= new ByteArrayInputStream(input);
 			    BufferedImage img = ImageIO.read(input_stream);
 			    String[] lastName = names.get(names.size()-1).split("-");
 			    ImageIO.write(img, "png", new File("resources/Images/"+lastName[0]+".png"));
+			    printToChat("01Received avatar from incoming user");
 			    break;
 		}
 	}

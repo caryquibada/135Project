@@ -271,6 +271,7 @@ public class Server extends JFrame implements Runnable{
 			    output.flush();
 			    byte[] out = output.toByteArray();
 			    sendBytesToDrawers(out);
+			    logToServer("Received avatar");
 				break;
 		}
 	}
