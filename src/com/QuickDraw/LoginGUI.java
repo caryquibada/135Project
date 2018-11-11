@@ -42,16 +42,16 @@ public class LoginGUI extends JFrame {
 	public JLabel bannerField;
 	private ImageIcon banner;
 	public LoginGUI() throws IOException {
+		setResizable(false);
 		buildWindow();
 	}
 	
 	public void buildWindow() throws IOException {
 		setBackground(new Color(255, 255, 255));
 		setForeground(new Color(255, 255, 255));
-		setResizable(false);
 		setTitle("Login");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(0, 0, 1150, 700);
+		setBounds(0, 0, 1150, 425);
 		contentPane = new JPanel();
 		contentPane.setVisible(true);
 		contentPane.setBackground(new Color(255, 255, 255));
@@ -61,12 +61,12 @@ public class LoginGUI extends JFrame {
 		//Name text field
 		NameField = new JTextField();
 		NameField.setFont(new Font("Arial", Font.PLAIN, 18));
-		NameField.setBounds(567, 402, 130, 38);
+		NameField.setBounds(155, 264, 130, 38);
 		contentPane.add(NameField);
 		NameField.setColumns(10);
-		JLabel lblName = new JLabel("Name:");
-		lblName.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		lblName.setBounds(462, 413, 91, 14);
+		JLabel lblName = new JLabel("NAME:");
+		lblName.setFont(new Font("Trebuchet MS", Font.BOLD, 24));
+		lblName.setBounds(50, 269, 91, 27);
 		contentPane.add(lblName);
 		
 		
@@ -85,11 +85,11 @@ public class LoginGUI extends JFrame {
 		}
 		
 		IPField.setColumns(10);
-		IPField.setBounds(567, 500, 130, 44);
+		IPField.setBounds(863, 38, 130, 44);
 		contentPane.add(IPField);
 		lblIpAddress = new JLabel("IP Address:");
-		lblIpAddress.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		lblIpAddress.setBounds(462, 513, 151, 14);
+		lblIpAddress.setFont(new Font("Trebuchet MS", Font.BOLD, 24));
+		lblIpAddress.setBounds(727, 51, 151, 31);
 		contentPane.add(lblIpAddress);
 		
 		//Port text field
@@ -97,22 +97,22 @@ public class LoginGUI extends JFrame {
 		PortField.setFont(new Font("Arial", Font.PLAIN, 14));
 		PortField.setText("3000");
 		PortField.setColumns(10);
-		PortField.setBounds(567, 555, 130, 44);
+		PortField.setBounds(863, 93, 130, 44);
 		contentPane.add(PortField);
 		lblPort = new JLabel("Port:");
-		lblPort.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		lblPort.setBounds(462, 567, 130, 14);
+		lblPort.setFont(new Font("Trebuchet MS", Font.BOLD, 24));
+		lblPort.setBounds(795, 105, 130, 32);
 		contentPane.add(lblPort);
 		
 		//Desired word text field
 		WordField = new JTextField();
 		WordField.setFont(new Font("Arial", Font.PLAIN, 14));
 		WordField.setColumns(10);
-		WordField.setBounds(567, 451, 130, 38);
+		WordField.setBounds(155, 313, 130, 38);
 		contentPane.add(WordField);
-		JLabel lblWord = new JLabel("Your word:");
-		lblWord.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		lblWord.setBounds(462, 460, 130, 14);
+		JLabel lblWord = new JLabel("WORD:");
+		lblWord.setFont(new Font("Trebuchet MS", Font.BOLD, 23));
+		lblWord.setBounds(50, 322, 130, 29);
 		contentPane.add(lblWord);
 		
 		//LOGIN button
@@ -130,7 +130,7 @@ public class LoginGUI extends JFrame {
 			}
 		});
 		LoginBTN.setFont(new Font("Yu Gothic UI", Font.BOLD, 26));
-		LoginBTN.setBounds(462, 610, 235, 61);
+		LoginBTN.setBounds(295, 264, 124, 87);
 		contentPane.add(LoginBTN);
 		BufferedImage img = ImageIO.read(new File("resources/Images/title.png"));
 		banner = new ImageIcon(img);

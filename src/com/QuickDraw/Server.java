@@ -52,7 +52,7 @@ public class Server extends JFrame implements Runnable{
 	private JTextField commandLine;
 	Thread clients;
 	private JScrollPane scrollPane;
-	public int drawerTurn=0,guesserCount=1,currGuess=1,drawerCount=1,guessThreshold=1,rounds=0,scoreCount=1,voteCount=0,voteThresh=1;
+	public int drawerTurn=0,guesserCount=1,currGuess=1,drawerCount=1,guessThreshold=1,rounds=0,scoreCount=1,voteCount=0,voteThresh=1,endCount = 0,  roundCount = 0;
 
 	public Server(int port) throws UnknownHostException{
 		setResizable(false); //Constructor for opening the Datagram Socket on port given by the server creator.
@@ -225,6 +225,7 @@ public class Server extends JFrame implements Runnable{
 					}
 					sendToDrawers(names);
 					scoreCount=0;
+					
 				}
 				scoreCount++;
 				break;
@@ -259,6 +260,15 @@ public class Server extends JFrame implements Runnable{
 				}
 				voteThresh++;
 				break;
+			case	"25":
+				  endCount++;
+				  //flag
+				//  logToServer("A>"+endCount +">" + players.size());
+				  
+				  if((players.size() == 4 && endCount == 12) || (players.size() == 5 && endCount == 20) || (players.size() == 6 && endCount == 24)){
+					sendToDrawers("26END");
+					}
+				  break;
 			default: 
 				byte[] input=packet.getData();
 			    ByteArrayInputStream input_stream= new ByteArrayInputStream(input);
@@ -271,7 +281,6 @@ public class Server extends JFrame implements Runnable{
 			    output.flush();
 			    byte[] out = output.toByteArray();
 			    sendBytesToDrawers(out);
-			    logToServer("Received avatar");
 				break;
 		}
 	}
@@ -298,11 +307,14 @@ public class Server extends JFrame implements Runnable{
 		}
 		if(readyPlayers==clientList.size()){
 			if(readyPlayers>3){
+				roundCount++;
+				sendToDrawers("25"+roundCount);
 				drawerTurn=0;
 				sendToDrawers("06"+clientList.size());
 				sendToDrawers("03Clear");
 				guesserCount=players.size();
 				getGuesser();
+
 			}else{
 				sendToDrawers("01\nAll players are ready but the game needs atleast 4 players to start.");
 			}
@@ -317,6 +329,7 @@ public class Server extends JFrame implements Runnable{
 			shuffleWords();
 		}else if(rounds==players.size()) {
 			sendToDrawers("No more rounds left!");
+			//sendToDrawers("26END");
 			return;
 		}
 		rounds++;
