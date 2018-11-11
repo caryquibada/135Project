@@ -178,8 +178,10 @@ public class ClientGUI extends JFrame implements Runnable{
 							String win="15Win";
 							client.sendMessage(win.getBytes());
 							seconds=1;
-						}else if(allSeconds!=seconds){
+						}else if(client.guesser&&allSeconds!=seconds){
 							printToChat("01Incorrect!");
+						}else if(client.drawer && allSeconds!=seconds){
+							printToChat(message);
 						}else {
 							printToChat(message);
 						}
@@ -277,7 +279,13 @@ public class ClientGUI extends JFrame implements Runnable{
 				seconds=1;
 				break;
 			case	"17":
-				nextField.setText(message.substring(2).trim());
+				String[] next= message.substring(2).trim().split(":");	
+				if(next[1].equals(client.getName())) {
+					nextField.setText("You're next");
+				}else {
+					nextField.setText(message.substring(2).trim());
+				}
+				
 				break;
 			case	"20":
 				printToChat("01Client closing since server is closed.");
