@@ -99,13 +99,10 @@ public class ClientGUI extends JFrame implements Runnable{
 				avatar.delete();
 				String disconnectMessage="04"+name;
 				client.sendMessage(disconnectMessage.getBytes());
-<<<<<<< HEAD
 				error=true;
 				while(error) {
 					updatePanels();
 				}
-=======
->>>>>>> 3c23998f7ec3ba7dc8943574aef91f8ce2d5b672
 			}
 		});
 		showWindow();
@@ -185,13 +182,10 @@ public class ClientGUI extends JFrame implements Runnable{
 							String win="15Win";
 							client.sendMessage(win.getBytes());
 							seconds=1;
-<<<<<<< HEAD
 						}else if(client.guesser&&allSeconds!=seconds){
 							printToChat("01Incorrect!");
 						}else if(client.drawer && allSeconds!=seconds){
 							printToChat(message);
-=======
->>>>>>> 3c23998f7ec3ba7dc8943574aef91f8ce2d5b672
 						}else {
 							printToChat("01Incorrect!");
 						}
@@ -335,16 +329,12 @@ public class ClientGUI extends JFrame implements Runnable{
 					panels.add(new JLabel());
 					labels.add(new JLabel(names.get(i)));
 				}
-<<<<<<< HEAD
 				error=true;
 				while(error) {
 					updatePanels();
 				}
 					
-=======
-					
 				updatePanels();
->>>>>>> 3c23998f7ec3ba7dc8943574aef91f8ce2d5b672
 				break;
 			case	"25":
 				roundCount=Integer.parseInt(message.substring(2).trim());
