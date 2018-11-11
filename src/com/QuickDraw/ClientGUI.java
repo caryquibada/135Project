@@ -72,7 +72,7 @@ public class ClientGUI extends JFrame implements Runnable{
 	private int ID=0,seconds=0,defSeconds,drawTime=100,allSeconds;
 	private int currXsend,currYsend,currXreceive,currYreceive;
     private JPanel mainCanvas,coverPanel;
-    private int turns=0,numberOfReadyPlayers,voteCountdown=0;
+    private int turns=0,numberOfReadyPlayers,voteCountdown=0, roundCount, showCount;
     private JTextField timerWindow;
     private JTextField DrawerTurn;
     private JTextField wordField;
@@ -99,10 +99,13 @@ public class ClientGUI extends JFrame implements Runnable{
 				avatar.delete();
 				String disconnectMessage="04"+name;
 				client.sendMessage(disconnectMessage.getBytes());
+<<<<<<< HEAD
 				error=true;
 				while(error) {
 					updatePanels();
 				}
+=======
+>>>>>>> 3c23998f7ec3ba7dc8943574aef91f8ce2d5b672
 			}
 		});
 		showWindow();
@@ -182,12 +185,15 @@ public class ClientGUI extends JFrame implements Runnable{
 							String win="15Win";
 							client.sendMessage(win.getBytes());
 							seconds=1;
+<<<<<<< HEAD
 						}else if(client.guesser&&allSeconds!=seconds){
 							printToChat("01Incorrect!");
 						}else if(client.drawer && allSeconds!=seconds){
 							printToChat(message);
+=======
+>>>>>>> 3c23998f7ec3ba7dc8943574aef91f8ce2d5b672
 						}else {
-							printToChat(message);
+							printToChat("01Incorrect!");
 						}
 					}else {
 						printToChat(message);
@@ -197,6 +203,7 @@ public class ClientGUI extends JFrame implements Runnable{
 						String[] temp=message.split(" ");
 						latestDrawer = temp[0];
 					}
+						
 					printToChat(message);
 				}
 				break;
@@ -307,13 +314,9 @@ public class ClientGUI extends JFrame implements Runnable{
 				for(int i=0;i<winners.length;i++) {
 					if(winners[i].equals(client.getName())) {
 						if(correct) {
-							JOptionPane winVoteDialog= new JOptionPane("Most votes!");
-							winVoteDialog.showMessageDialog(contentPane, "You have been voted as the best drawer!");
 							correct=false;
 							client.score++;
 						}else {
-							JOptionPane loseVoteDialog= new JOptionPane("Most votes!");
-							loseVoteDialog.showMessageDialog(contentPane, "You have been voted as the worst drawer!");
 							client.score--;
 						}
 					}
@@ -332,22 +335,38 @@ public class ClientGUI extends JFrame implements Runnable{
 					panels.add(new JLabel());
 					labels.add(new JLabel(names.get(i)));
 				}
+<<<<<<< HEAD
 				error=true;
 				while(error) {
 					updatePanels();
 				}
 					
+=======
+					
+				updatePanels();
+>>>>>>> 3c23998f7ec3ba7dc8943574aef91f8ce2d5b672
 				break;
+			case	"25":
+				roundCount=Integer.parseInt(message.substring(2).trim());
+				printToChat("01Round "+roundCount+" of " + numberOfReadyPlayers  );
+				break;
+			case	"26":
+				printToChat("01GameENDED");
+				endScreen();
+				endCountdown();
+				break;
+			
 			default:
+				System.out.println(condition);
 				byte[] input=msg.getData();
 			    ByteArrayInputStream input_stream= new ByteArrayInputStream(input);
 			    BufferedImage img = ImageIO.read(input_stream);
 			    String[] lastName = names.get(names.size()-1).split("-");
 			    ImageIO.write(img, "png", new File("resources/Images/"+lastName[0]+".png"));
-			    printToChat("01Received avatar from incoming user");
 			    break;
 		}
 	}
+	
 	
 	public void updatePanels() {
 		AvatarPanel.removeAll();
@@ -381,6 +400,7 @@ public class ClientGUI extends JFrame implements Runnable{
 	    int rc = JOptionPane.showOptionDialog(null, "Vote for player", "Voting",
 	        JOptionPane.WARNING_MESSAGE, 0, null, drawers, null);
 	    client.sendMessage(("21"+drawers[rc]).getBytes());
+	    client.sendMessage(("25").getBytes());
 	}
 	
 	public void gameStartCountdown() {
@@ -801,5 +821,28 @@ public class ClientGUI extends JFrame implements Runnable{
 				}
 			}
 		},0,1000);
+	}
+	public void endCountdown() {
+		Timer timer = new Timer();
+		timer.schedule(new TimerTask(){
+			int countdown=10;
+			public void run() {
+				printToChat("01"+countdown+"");
+				countdown--;
+				if(countdown==0) {
+					File delete = new File("resources/Images/"+client.getName()+".png");
+					delete.delete();
+					System.exit(0);
+					timer.cancel();
+				}
+			}
+		},0,1000);
+	}
+	private void endScreen() {
+		
+		
+		
+		ImageIcon iconic = new ImageIcon("resources/Images/winner.png");
+		JOptionPane.showMessageDialog(null, "You're the best player today!", "Congratulations!", JOptionPane.INFORMATION_MESSAGE, iconic );
 	}
 }
