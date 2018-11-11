@@ -73,6 +73,7 @@ public class ClientGUI extends JFrame implements Runnable{
 	private int currXsend,currYsend,currXreceive,currYreceive;
     private JPanel mainCanvas,coverPanel;
     private int turns=0,numberOfReadyPlayers,voteCountdown=0, roundCount, showCount;
+    private String winnerName="";
     private JTextField timerWindow;
     private JTextField DrawerTurn;
     private JTextField wordField;
@@ -340,11 +341,16 @@ public class ClientGUI extends JFrame implements Runnable{
 				roundCount=Integer.parseInt(message.substring(2).trim());
 				printToChat("01Round "+roundCount+" of " + numberOfReadyPlayers  );
 				break;
+			
 			case	"26":
+				
 				printToChat("01GameENDED");
-				endScreen();
+			//	client.sendMessage(("27Winner").getBytes());
+				winnerName = message.substring(2).trim();
+				endScreen(winnerName);
 				endCountdown();
 				break;
+			
 			
 			default:
 				System.out.println(condition);
@@ -828,11 +834,11 @@ public class ClientGUI extends JFrame implements Runnable{
 			}
 		},0,1000);
 	}
-	private void endScreen() {
+	private void endScreen(String winnerName) {
 		
 		
 		
 		ImageIcon iconic = new ImageIcon("resources/Images/winner.png");
-		JOptionPane.showMessageDialog(null, "You're the best player today!", "Congratulations!", JOptionPane.INFORMATION_MESSAGE, iconic );
+		JOptionPane.showMessageDialog(null, "Congratulations!\n"+ winnerName, "Best players today!!", JOptionPane.INFORMATION_MESSAGE, iconic );
 	}
 }

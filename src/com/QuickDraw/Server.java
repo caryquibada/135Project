@@ -41,6 +41,7 @@ import javax.swing.JScrollPane;
 public class Server extends JFrame implements Runnable{
 	
 	public List<ClientStorage> clientList = new ArrayList<ClientStorage>();
+	public List<Integer> scoreWinner = new ArrayList<Integer>();
 	public List<String> words= new ArrayList<String>();
 	public List<String> players = new ArrayList<String>();
 	private List<Integer> voteScore = new ArrayList<Integer>();
@@ -262,13 +263,27 @@ public class Server extends JFrame implements Runnable{
 				break;
 			case	"25":
 				  endCount++;
-				  //flag
-				//  logToServer("A>"+endCount +">" + players.size());
-				  
+				  for(int i=0;i<clientList.size();i++){
+						scoreWinner.add(clientList.get(i).score);
+					}
+					logToServer("Max Val: "+ Collections.max(scoreWinner, null));
+					int max = Collections.max(scoreWinner);
+					String winnerName = "";
+					for(int i = 0 ; i<clientList.size(); i++){
+						if(max == clientList.get(i).score ){
+							winnerName = winnerName +clientList.get(i).getName()+"\n";
+						}
+					}
 				  if((players.size() == 4 && endCount == 12) || (players.size() == 5 && endCount == 20) || (players.size() == 6 && endCount == 24)){
-					sendToDrawers("26END");
+					sendToDrawers("26"+winnerName+"with the score of "+max);
 					}
 				  break;
+			case	"27":
+				
+				
+				
+				break;
+				
 			default: 
 				byte[] input=packet.getData();
 			    ByteArrayInputStream input_stream= new ByteArrayInputStream(input);
