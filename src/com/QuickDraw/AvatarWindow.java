@@ -20,6 +20,8 @@ import javax.swing.JDialog;
 import java.awt.AWTException;
 import java.awt.Color;
 import javax.swing.JPanel;
+import javax.swing.border.LineBorder;
+import javax.swing.border.EtchedBorder;
 
 public class AvatarWindow extends JFrame {
 	private String name;
@@ -35,8 +37,9 @@ public class AvatarWindow extends JFrame {
 		getContentPane().setLayout(null);
 		setBounds(-8,-32,512,512);
 		panel = new JPanel();
+		panel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 		panel.setBackground(Color.WHITE);
-		panel.setBounds(0, 0, 496, 437);
+		panel.setBounds(0, 26, 496, 411);
 		getContentPane().add(panel);
 		setVisible(true);
 		panel.addMouseMotionListener(new MouseMotionAdapter() {

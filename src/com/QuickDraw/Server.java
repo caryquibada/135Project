@@ -26,6 +26,7 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.DefaultCaret;
@@ -247,7 +248,7 @@ public class Server extends JFrame implements Runnable{
 				logToServer("voteThresh: "+voteThresh);
 				if(voteThresh==players.size()-1) {
 					int max=Collections.max(voteScore);
-					String voteWinners="23";
+					String voteWinners="23"+max+"\t";
 					for(int i=0;i<voteScore.size();i++) {
 						if(voteScore.get(i)==max) {
 							voteWinners=voteWinners+players.get(i)+"\t";

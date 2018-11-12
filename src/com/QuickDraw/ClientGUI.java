@@ -21,6 +21,7 @@ import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -86,6 +87,7 @@ public class ClientGUI extends JFrame implements Runnable{
     private String[] drawers;
     private AvatarWindow avatar;
     private JPanel AvatarPanel;
+	private JProgressBar progressbar;
     private List<JLabel> panels= new ArrayList<JLabel>();
     private List<String> names = new ArrayList<String>();
     private List<JLabel> labels = new ArrayList<JLabel>();
@@ -302,16 +304,16 @@ public class ClientGUI extends JFrame implements Runnable{
 			case	"23":
 				String[] winners=message.substring(2).trim().split("\t");
 				printToChat("01Most votes-");
-				for(int i=0;i<winners.length;i++) {
+				for(int i=1;i<winners.length;i++) {
 					printToChat("01"+winners[i]);
 				}
-				for(int i=0;i<winners.length;i++) {
+				for(int i=1;i<winners.length;i++) {
 					if(winners[i].equals(client.getName())) {
 						if(correct) {
 							correct=false;
-							client.score++;
+							client.score = client.score+Integer.parseInt(winners[0]);
 						}else {
-							client.score--;
+							client.score= client.score-Integer.parseInt(winners[0]);
 						}
 					}
 				}
@@ -416,12 +418,15 @@ public class ClientGUI extends JFrame implements Runnable{
 		client.sendMessage("10Draw".getBytes()); //Draw Turn
 		Timer timer = new Timer();
 		setSeconds(allSeconds);
+		progressbar.setMaximum(defSeconds);
 		timer.schedule(new TimerTask(){
 			int turns=numberOfReadyPlayers-1;
 			int drawTurns=1;
-			
+			int progress=0;
 			public void run(){
 				drawTime=seconds-(defSeconds*turns);
+				progressbar.setValue(++progress);
+				progressbar.setString(progress+"");
 				Graphics g= timerWindow.getGraphics();
 				g.setColor(Color.WHITE);
 				g.fillRect(0, 0, timerWindow.WIDTH, timerWindow.HEIGHT);
@@ -540,10 +545,14 @@ public class ClientGUI extends JFrame implements Runnable{
 						break;
 				}
 				if(drawTime==0 && drawTurns<numberOfReadyPlayers-1){
+					progressbar.setValue(0);
+					progress=0;
 					client.sendMessage("10Draw".getBytes()); //Draw Turn
 					drawTurns++;
 					turns--;
 				}else if(drawTime==0&& drawTurns==numberOfReadyPlayers-1){
+					progressbar.setValue(0);
+					progress=0;
 					client.sendMessage("11ChangeGuessTurn".getBytes());
 					drawTurns=1;
 					turns--;
@@ -551,14 +560,17 @@ public class ClientGUI extends JFrame implements Runnable{
 				}
 				seconds--;
 				if(seconds==0){
+					progressbar.setValue(0);
+					progress=0;
 					if(correct) {
-						printToChat("01Nice");
+						winWindow();
 						if(client.guesser) {
 							client.score=client.score+3;
 						}else {
 							client.score=client.score+2;
 						}
 					}else {
+						loseWindow(currentWord);
 						client.score=client.score+1;
 					}
 					client.sendMessage("16Unready".getBytes());
@@ -752,12 +764,19 @@ public class ClientGUI extends JFrame implements Runnable{
 		AvatarPanel = new JPanel();
 		AvatarPanel.setBorder(new LineBorder(new Color(0, 0, 0), 1, true));
 		AvatarPanel.setBackground(Color.WHITE);
-		AvatarPanel.setBounds(10, 12, 209, 648);
+		AvatarPanel.setBounds(10, 70, 209, 590);
 		AvatarPanel.setLayout(null);
 		contentPane.add(AvatarPanel);
+		
 		//ChatHistory Text Area
 		
-		
+		progressbar = new JProgressBar();
+		progressbar.setBackground(Color.WHITE);
+		progressbar.setFont(new Font("Tahoma", Font.BOLD, 14));
+		progressbar.setBounds(10, 11, 209, 48);
+		progressbar.setMinimum(0);
+		progressbar.setBorder(new LineBorder(new Color(0, 0, 0), 1, true));
+		contentPane.add(progressbar);
 	}
 	
 	
