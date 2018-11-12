@@ -78,7 +78,7 @@ public class ClientGUI extends JFrame implements Runnable{
     private JTextField timerWindow;
     private JTextField DrawerTurn;
     private JTextField wordField;
-    private String guesser,currentWord="",latestDrawer;
+    private String guesser,currentWord="",latestDrawer,filename="";
     private JLayeredPane panel;
     private Image img;
     private List<Point> points = new ArrayList<Point>();
@@ -98,7 +98,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent arg0) {
-				File avatar= new File("resources/Images/"+client.getName()+".png");
+				File avatar= new File("resources/Images/"+client.getName()+".jpg");
 				avatar.delete();
 				String disconnectMessage="04"+name;
 				client.sendMessage(disconnectMessage.getBytes());
@@ -165,12 +165,11 @@ public class ClientGUI extends JFrame implements Runnable{
 		switch(condition) {
 			case	"00":
 				client.setID(Integer.parseInt(message.substring(3,message.length()).trim()));
-				BufferedImage img1 = ImageIO.read(new File("resources/Images/"+client.getName()+".png"));
+				BufferedImage img1 = ImageIO.read(new File("resources/Images/"+client.getName()+".jpg"));
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				ImageIO.write(img1, "png", baos);
+				ImageIO.write(img1, "jpg", baos);
 				baos.flush();
 				byte[] buffer  = baos.toByteArray();
-				System.out.println(buffer.toString());
 				client.sendMessage(buffer);
 				sendPacket(client.getName()+" has connected");
 				
@@ -332,11 +331,11 @@ public class ClientGUI extends JFrame implements Runnable{
 					panels.add(new JLabel());
 					labels.add(new JLabel(names.get(i)));
 				}
+				System.out.println(namesSplit.length);
 				error=true;
 				while(error) {
 					updatePanels();
 				}
-					
 				updatePanels();
 				break;
 			case	"25":
@@ -352,15 +351,16 @@ public class ClientGUI extends JFrame implements Runnable{
 				endScreen(winnerName);
 				endCountdown();
 				break;
-			
+			case	"28":
+				filename=message.substring(2).trim();
+				break;
 			
 			default:
-				System.out.println(condition);
+				System.out.println(filename);
 				byte[] input=msg.getData();
 			    ByteArrayInputStream input_stream= new ByteArrayInputStream(input);
 			    BufferedImage img = ImageIO.read(input_stream);
-			    String[] lastName = names.get(names.size()-1).split("-");
-			    ImageIO.write(img, "png", new File("resources/Images/"+lastName[0]+".png"));
+			    ImageIO.write(img, "jpg", new File("resources/Images/"+filename+".jpg"));
 			    break;
 		}
 	}
@@ -368,16 +368,17 @@ public class ClientGUI extends JFrame implements Runnable{
 	
 	public void updatePanels() {
 		AvatarPanel.removeAll();
-		for(int i=0;i<panels.size();i++) {
+		for(int i=0;i<names.size();i++) {
 			panels.get(i).setBounds(0, 0+((AvatarPanel.getHeight()/6)*i),AvatarPanel.getWidth(), (AvatarPanel.getHeight())/6);
 			AvatarPanel.add(panels.get(i));
 			panels.get(i).add(labels.get(i));
 			panels.get(i).setBorder(new LineBorder(new Color(0, 0, 0), 1, true));
 			labels.get(i).setBounds(AvatarPanel.getHeight()/6,0,AvatarPanel.getWidth()-(AvatarPanel.getHeight()/6),AvatarPanel.getHeight()/6);
-			String[] filename=names.get(i).trim().split("-");
+			String[] filenames=names.get(i).trim().split("-");
 			Image img;
 			try {
-				img=ImageIO.read(new File("resources/Images/"+filename[0]+".png")); 
+				img=ImageIO.read(new File("resources/Images/"+filenames[0]+".jpg")); 
+				System.out.println("filenames:"+filenames[0]);
 				img=img.getScaledInstance(panels.get(i).getHeight(),panels.get(i).getHeight(),Image.SCALE_SMOOTH);
 				panels.get(i).setIcon(new ImageIcon(img));
 			} catch (IIOException e) {
@@ -845,7 +846,7 @@ public class ClientGUI extends JFrame implements Runnable{
 				printToChat("01"+countdown+"");
 				countdown--;
 				if(countdown==0) {
-					File delete = new File("resources/Images/"+client.getName()+".png");
+					File delete = new File("resources/Images/"+client.getName()+".jpg");
 					delete.delete();
 					System.exit(0);
 					timer.cancel();

@@ -78,7 +78,7 @@ public class Client {
 	
 	/*Receiving a message from the server*/
 	public DatagramPacket receive(){
-		byte[] data = new byte[4096];
+		byte[] data = new byte[11000];
 		DatagramPacket receivePacket = new DatagramPacket(data,data.length);
 		try {
 			socket.receive(receivePacket);

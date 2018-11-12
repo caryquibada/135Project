@@ -62,7 +62,7 @@ public class AvatarWindow extends JFrame {
 				try {
 					Rectangle screenRect = new Rectangle(panel.getSize());
 					BufferedImage capture = new Robot().createScreenCapture(screenRect);
-					ImageIO.write(capture, "png", new File("resources/Images/"+name+".png"));
+					ImageIO.write(capture, "jpg", new File("resources/Images/"+name+".jpg"));
 					startClient(name,IPAddress,port,word);
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block

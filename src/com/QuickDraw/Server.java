@@ -85,7 +85,7 @@ public class Server extends JFrame implements Runnable{
 		receive = new Thread("Receive Message"){
 			public void run(){
 				while(serverRunning){
-					byte[] data = new byte[4096];
+					byte[] data = new byte[11000];
 					DatagramPacket receivePacket = new DatagramPacket(data,data.length);
 					try {
 						socket.receive(receivePacket);
@@ -116,6 +116,7 @@ public class Server extends JFrame implements Runnable{
 				String[] messageArray=message.split(",");
 				clientList.add(new ClientStorage(messageArray[0],packet.getAddress(),packet.getPort(),id,messageArray[1]));
 				String ID = "00"+id;
+				
 				sendMessage(ID.getBytes(), packet.getAddress(), packet.getPort());
 				logToServer("Client connected with IP: "+packet.getAddress());//Printing connecting client IP
 				names= "24";
@@ -123,6 +124,16 @@ public class Server extends JFrame implements Runnable{
 					names=names+clientList.get(i).getName()+"-"+clientList.get(i).score+"\t";
 				}
 				sendToDrawers(names);
+				for(int i=0;i<clientList.size()-1;i++) {
+					String filename="28"+clientList.get(i).getName();
+					sendMessage(filename.getBytes(),clientList.get(clientList.size()-1).getAddress(),clientList.get(clientList.size()-1).getPort());
+					 BufferedImage img = ImageIO.read(new File("resources/Images/"+clientList.get(i).getName()+".jpg"));
+					 ByteArrayOutputStream output = new ByteArrayOutputStream();
+					 ImageIO.write(img, "jpg", output);
+					 output.flush();
+					 byte[] out = output.toByteArray();
+					 sendMessage(out,clientList.get(clientList.size()-1).getAddress(),clientList.get(clientList.size()-1).getPort());
+				}
 				break;
 			case	"01":
 				sendToDrawers(message);
@@ -290,14 +301,19 @@ public class Server extends JFrame implements Runnable{
 			    ByteArrayInputStream input_stream= new ByteArrayInputStream(input);
 			    BufferedImage final_buffered_image = ImageIO.read(input_stream);
 			    String filename=clientList.get(clientList.size()-1).getName();
-			    ImageIO.write(final_buffered_image , "png", new File("resources/Images/"+filename+".png") );
+			    ImageIO.write(final_buffered_image , "jpg", new File("resources/Images/"+filename+".jpg") );
 			    
-			    BufferedImage img = ImageIO.read(new File("resources/Images/"+filename+".png"));
-			    ByteArrayOutputStream output = new ByteArrayOutputStream();
-			    ImageIO.write(img, "png", output);
-			    output.flush();
-			    byte[] out = output.toByteArray();
-			    sendBytesToDrawers(out);
+			    
+			    for(int i=0;i<clientList.size()-1;i++) {
+					filename="28"+clientList.get(i).getName();
+					sendMessage(filename.getBytes(),clientList.get(clientList.size()-1).getAddress(),clientList.get(clientList.size()-1).getPort());
+					 BufferedImage img = ImageIO.read(new File("resources/Images/"+clientList.get(i).getName()+".jpg"));
+					 ByteArrayOutputStream output = new ByteArrayOutputStream();
+					 ImageIO.write(img, "jpg", output);
+					 output.flush();
+					 byte[] out = output.toByteArray();
+					 sendMessage(out,clientList.get(clientList.size()-1).getAddress(),clientList.get(clientList.size()-1).getPort());
+				}
 				break;
 		}
 	}
