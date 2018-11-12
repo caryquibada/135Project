@@ -319,7 +319,7 @@ public class ClientGUI extends JFrame implements Runnable{
 					}
 				}
 				scoreField.setText("Your score: "+client.score );
-				client.sendMessage(("18"+client.getName()+"-"+client.score).getBytes());
+				client.sendMessage(("18"+client.getName()+":"+client.score).getBytes());
 				client.sendMessage("19".getBytes());
 				break;
 			case	"24":
@@ -580,7 +580,7 @@ public class ClientGUI extends JFrame implements Runnable{
 						client.score=client.score+1;
 					}
 					client.sendMessage("16Unready".getBytes());
-					client.sendMessage(("18"+client.getName()+"-"+client.score).getBytes());
+					client.sendMessage(("18"+client.getName()+":"+client.score).getBytes());
 					client.sendMessage("19".getBytes());
 					clearFields();
 					setSeconds(allSeconds);

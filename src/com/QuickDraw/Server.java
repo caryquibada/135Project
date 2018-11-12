@@ -206,7 +206,7 @@ public class Server extends JFrame implements Runnable{
 				}
 				break;
 			case	"18":
-				String[] scores=message.substring(2).trim().split("-");
+				String[] scores=message.substring(2).trim().split(":");
 				for(int i=0;i<clientList.size();i++) {
 					if(clientList.get(i).getName().equals(scores[0])) {
 						clientList.get(i).score=Integer.parseInt(scores[1]);
