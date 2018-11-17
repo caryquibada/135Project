@@ -179,7 +179,7 @@ public class ClientGUI extends JFrame implements Runnable{
 				if(chatMessage.length>1){ 
 					if(client.myTurn&&seconds!=0){//When it's time to guess
 						String[] splitGuess=message.split(":");
-						if(splitGuess[1].trim().equals(currentWord)) {
+						if(splitGuess[1].trim().toLowerCase().equals(currentWord.toLowerCase())) {
 							printToChat("01Correct!");
 							String win="15Win";
 							client.sendMessage(win.getBytes());
@@ -189,7 +189,7 @@ public class ClientGUI extends JFrame implements Runnable{
 						}else if(client.drawer && allSeconds!=seconds){
 							printToChat(message);
 						}else {
-							printToChat("01Incorrect!");
+							printToChat(message);
 						}
 					}else {
 						printToChat(message);
@@ -317,6 +317,7 @@ public class ClientGUI extends JFrame implements Runnable{
 						}
 					}
 				}
+				correct=false;
 				scoreField.setText("Your score: "+client.score );
 				client.sendMessage(("18"+client.getName()+":"+client.score).getBytes());
 				client.sendMessage("19".getBytes());
@@ -354,7 +355,6 @@ public class ClientGUI extends JFrame implements Runnable{
 			case	"28":
 				filename=message.substring(2).trim();
 				break;
-			
 			default:
 				System.out.println(filename);
 				byte[] input=msg.getData();
@@ -567,11 +567,13 @@ public class ClientGUI extends JFrame implements Runnable{
 				}
 				seconds--;
 				if(seconds==0){
+					
 					progressbar.setValue(0);
 					progress=0;
 					if(correct) {
 						winWindow();
 						if(client.guesser) {
+							correct=false;
 							client.score=client.score+3;
 						}else {
 							client.score=client.score+2;
@@ -598,6 +600,7 @@ public class ClientGUI extends JFrame implements Runnable{
 						showVoting();
 					}
 					client.guesser=false;
+					
 					timer.cancel();
 				}
 			}
@@ -728,6 +731,7 @@ public class ClientGUI extends JFrame implements Runnable{
 			public void mouseReleased(MouseEvent arg0) {
 				client.ready="true";
 				client.sendMessage(("05"+client.getName()).getBytes());
+				updatePanels();
 			}
 		});
 		readyBtn.setBounds(1189, 12, 164, 47);

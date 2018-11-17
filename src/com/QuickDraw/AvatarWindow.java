@@ -60,7 +60,7 @@ public class AvatarWindow extends JFrame {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				try {
-					Rectangle screenRect = new Rectangle(panel.getSize());
+					Rectangle screenRect = new Rectangle(0,45,496,411);
 					BufferedImage capture = new Robot().createScreenCapture(screenRect);
 					ImageIO.write(capture, "jpg", new File("resources/Images/"+name+".jpg"));
 					startClient(name,IPAddress,port,word);
