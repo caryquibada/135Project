@@ -5,9 +5,11 @@ package com.QuickDraw;
  * Github,Youtube. (2014). Cherno Chat. [online] Available at: https://github.com/TheCherno/ChernoChat/tree/master/src/com/thecherno/chernochat, https://www.youtube.com/user/TheChernoProject [Accessed 24 Sep. 2018].*/
 
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -20,7 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-
+import java.util.Random;
 import javax.imageio.ImageIO;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -55,8 +57,8 @@ public class Server extends JFrame implements Runnable{
 	Thread clients;
 	private JScrollPane scrollPane;
 	public int drawerTurn=0,guesserCount=1,currGuess=1,drawerCount=1,guessThreshold=1,rounds=0,scoreCount=1,voteCount=0,voteThresh=1,endCount = 0,  roundCount = 0;
-
-	public Server(int port) throws UnknownHostException{
+	private String[] playerwords=new String[6];
+	public Server(int port) throws IOException{
 		setResizable(false); //Constructor for opening the Datagram Socket on port given by the server creator.
 		this.port=port;
 		showWindow();
@@ -75,6 +77,15 @@ public class Server extends JFrame implements Runnable{
 		runServer=new Thread(this,"Server");
 		runServer.start();
 		logToServer("Server running on port: "+port);
+		String[] words=readFile("resources/words.txt");
+		Random rand = new Random();
+		
+		for(int i=0;i<6;i++) {
+			int n = rand.nextInt(words.length);
+			playerwords[i]=words[n];
+			logToServer(playerwords[i]);
+		}
+		
 	}
 	public void run(){
 		serverRunning = true;
@@ -113,8 +124,7 @@ public class Server extends JFrame implements Runnable{
 				int id = new SecureRandom().nextInt();
 				message=message.trim();
 				message=message.substring(2);
-				String[] messageArray=message.split(",");
-				clientList.add(new ClientStorage(messageArray[0],packet.getAddress(),packet.getPort(),id,messageArray[1]));
+				clientList.add(new ClientStorage(message,packet.getAddress(),packet.getPort(),id));
 				String ID = "00"+id;
 				
 				sendMessage(ID.getBytes(), packet.getAddress(), packet.getPort());
@@ -127,22 +137,22 @@ public class Server extends JFrame implements Runnable{
 				for(int i=0;i<clientList.size()-1;i++) {
 					String filename="28"+clientList.get(i).getName();
 					sendMessage(filename.getBytes(),clientList.get(clientList.size()-1).getAddress(),clientList.get(clientList.size()-1).getPort());
-					 BufferedImage img = ImageIO.read(new File("resources/Images/"+clientList.get(i).getName()+".jpg"));
-					 ByteArrayOutputStream output = new ByteArrayOutputStream();
-					 ImageIO.write(img, "jpg", output);
-					 output.flush();
-					 byte[] out = output.toByteArray();
-					 sendMessage(out,clientList.get(clientList.size()-1).getAddress(),clientList.get(clientList.size()-1).getPort());
+					BufferedImage img = ImageIO.read(new File("resources/Images/"+clientList.get(i).getName()+".jpg"));
+					ByteArrayOutputStream output = new ByteArrayOutputStream();
+					ImageIO.write(img, "jpg", output);
+					output.flush();
+					byte[] out = output.toByteArray();
+					sendMessage(out,clientList.get(clientList.size()-1).getAddress(),clientList.get(clientList.size()-1).getPort());
 				}
 				for(int i=0;i<clientList.size()-1;i++) {
 					String filename="28"+clientList.get(clientList.size()-1).getName();
 					sendMessage(filename.getBytes(),clientList.get(i).getAddress(),clientList.get(i).getPort());
-					 BufferedImage img = ImageIO.read(new File("resources/Images/"+clientList.get(clientList.size()-1).getName()+".jpg"));
-					 ByteArrayOutputStream output = new ByteArrayOutputStream();
-					 ImageIO.write(img, "jpg", output);
-					 output.flush();
-					 byte[] out = output.toByteArray();
-					 sendMessage(out,clientList.get(i).getAddress(),clientList.get(i).getPort());
+					BufferedImage img = ImageIO.read(new File("resources/Images/"+clientList.get(clientList.size()-1).getName()+".jpg"));
+					ByteArrayOutputStream output = new ByteArrayOutputStream();
+					ImageIO.write(img, "jpg", output);
+					output.flush();
+					byte[] out = output.toByteArray();
+					sendMessage(out,clientList.get(i).getAddress(),clientList.get(i).getPort());
 				}
 				break;
 			case	"01":
@@ -440,7 +450,7 @@ public class Server extends JFrame implements Runnable{
 	
 	public void shuffleWords(){
 		for(int i=0;i<clientList.size();i++){
-			words.add(clientList.get(i).getWord());
+			words.add(playerwords[i]);
 		}
 		Collections.shuffle(words);
 		logToServer(words.toString());
@@ -500,7 +510,23 @@ public class Server extends JFrame implements Runnable{
 			commandLine.setText("");
 		}
 	}
-	
+	String[] readFile(String fileName) throws IOException {
+	    BufferedReader br = new BufferedReader(new FileReader(fileName));
+	    try {
+	        StringBuilder sb = new StringBuilder();
+	        String line = br.readLine();
+
+	        while (line != null) {
+	            sb.append(line);
+	            sb.append("\n");
+	            line = br.readLine();
+	        }
+	        String words=sb.toString();
+	        return words.split("\n");
+	    } finally {
+	        br.close();
+	    }
+	}
 	public String listPlayers(){
 		String players = "("+clientList.size()+"): ";
 		for(int i=0;i<clientList.size();i++){

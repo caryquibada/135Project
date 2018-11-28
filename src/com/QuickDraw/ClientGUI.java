@@ -92,7 +92,7 @@ public class ClientGUI extends JFrame implements Runnable{
     private List<JLabel> panels= new ArrayList<JLabel>();
     private List<String> names = new ArrayList<String>();
     private List<JLabel> labels = new ArrayList<JLabel>();
-	public ClientGUI(String name,String IPAddress, int port,String word){
+	public ClientGUI(String name,String IPAddress, int port){
 		setTitle("QuickDraw! \t"+name);
 		setBackground(new Color(255, 255, 255));
 		addWindowListener(new WindowAdapter() {
@@ -109,10 +109,10 @@ public class ClientGUI extends JFrame implements Runnable{
 			}
 		});
 		showWindow();
-		client = new Client(name,IPAddress,port,word);
+		client = new Client(name,IPAddress,port);
 		client.drawTurn=true;
 		boolean connected=client.connect(IPAddress,port);
-		String connectPacket = "00"+name+","+word;
+		String connectPacket = "00"+name;
 		client.sendMessage(connectPacket.getBytes());
 		clientRunning = true;
 		run = new Thread(this,"Client Thread");

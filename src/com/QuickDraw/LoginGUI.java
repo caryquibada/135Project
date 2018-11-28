@@ -61,12 +61,12 @@ public class LoginGUI extends JFrame {
 		//Name text field
 		NameField = new JTextField();
 		NameField.setFont(new Font("Arial", Font.PLAIN, 18));
-		NameField.setBounds(155, 264, 130, 38);
+		NameField.setBounds(155, 293, 130, 38);
 		contentPane.add(NameField);
 		NameField.setColumns(10);
 		JLabel lblName = new JLabel("NAME:");
 		lblName.setFont(new Font("Trebuchet MS", Font.BOLD, 24));
-		lblName.setBounds(50, 269, 91, 27);
+		lblName.setBounds(54, 296, 91, 27);
 		contentPane.add(lblName);
 		
 		
@@ -104,17 +104,6 @@ public class LoginGUI extends JFrame {
 		lblPort.setBounds(795, 105, 130, 32);
 		contentPane.add(lblPort);
 		
-		//Desired word text field
-		WordField = new JTextField();
-		WordField.setFont(new Font("Arial", Font.PLAIN, 14));
-		WordField.setColumns(10);
-		WordField.setBounds(155, 313, 130, 38);
-		contentPane.add(WordField);
-		JLabel lblWord = new JLabel("WORD:");
-		lblWord.setFont(new Font("Trebuchet MS", Font.BOLD, 23));
-		lblWord.setBounds(50, 322, 130, 29);
-		contentPane.add(lblWord);
-		
 		//LOGIN button
 		JButton LoginBTN = new JButton("LOGIN");
 		LoginBTN.setForeground(new Color(0, 51, 0));
@@ -124,9 +113,8 @@ public class LoginGUI extends JFrame {
 			public void mouseReleased(MouseEvent arg0) {
 				String name=NameField.getText();
 				String IPAddress=IPField.getText();
-				String word=WordField.getText();
 				int port=Integer.parseInt(PortField.getText());
-				login(name,IPAddress,port,word);
+				login(name,IPAddress,port);
 			}
 		});
 		LoginBTN.setFont(new Font("Yu Gothic UI", Font.BOLD, 26));
@@ -140,8 +128,8 @@ public class LoginGUI extends JFrame {
 		contentPane.add(bannerField);
 	} 
 	//Calling the ClientGUI class
-	public void login(String name, String IPAddress, int port,String word){
+	public void login(String name, String IPAddress, int port){
 		dispose();
-		new AvatarWindow(name,IPAddress,port,word);
+		new AvatarWindow(name,IPAddress,port);
 	}
 }

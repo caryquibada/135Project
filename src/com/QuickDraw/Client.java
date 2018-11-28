@@ -27,18 +27,13 @@ public class Client {
 	public String ready="false";
 	private int guessTurn=0; //Guess turn number
 	
-	public Client(String name, String IPAddress, int port,String word){
+	public Client(String name, String IPAddress, int port){
 		this.name=name;
 		this.IPAddress=IPAddress;
 		this.port=port;
-		this.word=word;
 	}
 	public String getName(){
 		return name;
-	}
-	
-	public String getWord(){
-		return word;
 	}
 	
 	public void setID(int ID){

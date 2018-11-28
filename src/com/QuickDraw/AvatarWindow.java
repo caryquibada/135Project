@@ -31,7 +31,7 @@ public class AvatarWindow extends JFrame {
 	/**
 	 * Create the panel.
 	 */
-	public AvatarWindow(String name,String IPAddress, int port,String word) {
+	public AvatarWindow(String name,String IPAddress, int port) {
 		this.name=name;
 		getContentPane().setBackground(Color.WHITE);
 		getContentPane().setLayout(null);
@@ -63,7 +63,7 @@ public class AvatarWindow extends JFrame {
 					Rectangle screenRect = new Rectangle(0,45,496,411);
 					BufferedImage capture = new Robot().createScreenCapture(screenRect);
 					ImageIO.write(capture, "jpg", new File("resources/Images/"+name+".jpg"));
-					startClient(name,IPAddress,port,word);
+					startClient(name,IPAddress,port);
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -88,9 +88,9 @@ public class AvatarWindow extends JFrame {
 		btnClear.setBounds(352, 439, 64, 23);
 		getContentPane().add(btnClear);
 	}
-	public void startClient(String name,String IPAddress,int port, String word) {
+	public void startClient(String name,String IPAddress,int port) {
 		dispose();
-		new ClientGUI(name,IPAddress,port,word);
+		new ClientGUI(name,IPAddress,port);
 	}
 	public void drawLines(int X,int Y){
 		int oldXsend=currX;

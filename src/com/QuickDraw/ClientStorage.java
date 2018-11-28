@@ -15,16 +15,11 @@ public class ClientStorage {
 	public int attempt=0,score=0;
 	public String ready="false";
 	public boolean drawer=true;
-	public String word;
-	public ClientStorage(String name, InetAddress address, int port, final int ID,String word){
+	public ClientStorage(String name, InetAddress address, int port, final int ID){
 		this.name=name;
 		this.address=address;
 		this.port=port;
 		this.ID=ID;
-		this.word=word;
-	}
-	public String getWord(){
-		return this.word;
 	}
 	public int getID(){
 		return this.ID;
