@@ -322,10 +322,9 @@ public class Server extends JFrame implements Runnable{
 			    BufferedImage final_buffered_image = ImageIO.read(input_stream);
 			    String filename=clientList.get(clientList.size()-1).getName();
 			    ImageIO.write(final_buffered_image , "jpg", new File("resources/Images/"+filename+".jpg") );
-			    
-			    
 			    for(int i=0;i<clientList.size()-1;i++) {
 					filename="28"+clientList.get(i).getName();
+					System.out.println(filename);
 					sendMessage(filename.getBytes(),clientList.get(clientList.size()-1).getAddress(),clientList.get(clientList.size()-1).getPort());
 					 BufferedImage img = ImageIO.read(new File("resources/Images/"+clientList.get(i).getName()+".jpg"));
 					 ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -333,6 +332,17 @@ public class Server extends JFrame implements Runnable{
 					 output.flush();
 					 byte[] out = output.toByteArray();
 					 sendMessage(out,clientList.get(clientList.size()-1).getAddress(),clientList.get(clientList.size()-1).getPort());
+				}
+			    for(int i=0;i<clientList.size()-1;i++) {
+					filename="28"+clientList.get(clientList.size()-1).getName();
+					System.out.println(filename);
+					sendMessage(filename.getBytes(),clientList.get(i).getAddress(),clientList.get(i).getPort());
+					 BufferedImage img = ImageIO.read(new File("resources/Images/"+clientList.get(clientList.size()-1).getName()+".jpg"));
+					 ByteArrayOutputStream output = new ByteArrayOutputStream();
+					 ImageIO.write(img, "jpg", output);
+					 output.flush();
+					 byte[] out = output.toByteArray();
+					 sendMessage(out,clientList.get(i).getAddress(),clientList.get(i).getPort());
 				}
 				break;
 		}
@@ -491,8 +501,6 @@ public class Server extends JFrame implements Runnable{
 		});
 	
 	}
-	
-	
 	public void serverCommands(String command){
 		if(command.startsWith("/all")){
 			sendToDrawers("01"+"Server says:"+command.substring(4));

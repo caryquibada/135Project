@@ -52,6 +52,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.DatagramPacket;
 
@@ -98,8 +99,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent arg0) {
-				File avatar= new File("resources/Images/"+client.getName()+".jpg");
-				avatar.delete();
+				deleteImages();
 				String disconnectMessage="04"+name;
 				client.sendMessage(disconnectMessage.getBytes());
 				error=true;
@@ -332,7 +332,6 @@ public class ClientGUI extends JFrame implements Runnable{
 					panels.add(new JLabel());
 					labels.add(new JLabel(names.get(i)));
 				}
-				System.out.println(namesSplit.length);
 				error=true;
 				while(error) {
 					updatePanels();
@@ -365,7 +364,18 @@ public class ClientGUI extends JFrame implements Runnable{
 		}
 	}
 	
-	
+	public void deleteImages() {
+		File dir = new File("resources/Images");
+		String[] filenames=dir.list();
+		for(int i=0;i<filenames.length;i++) {
+			
+			if(filenames[i].endsWith(".jpg")) {
+				File deleteFile= new File("resources/Images/"+filenames[i]);
+				System.out.println(deleteFile.exists());
+				System.out.println(deleteFile.delete());
+			}
+		}
+	}
 	public void updatePanels() {
 		AvatarPanel.removeAll();
 		for(int i=0;i<names.size();i++) {
@@ -378,7 +388,6 @@ public class ClientGUI extends JFrame implements Runnable{
 			Image img;
 			try {
 				img=ImageIO.read(new File("resources/Images/"+filenames[0]+".jpg")); 
-				System.out.println("filenames:"+filenames[0]);
 				img=img.getScaledInstance(panels.get(i).getHeight(),panels.get(i).getHeight(),Image.SCALE_SMOOTH);
 				panels.get(i).setIcon(new ImageIcon(img));
 			} catch (IIOException e) {
@@ -859,9 +868,6 @@ public class ClientGUI extends JFrame implements Runnable{
 		},0,1000);
 	}
 	private void endScreen(String winnerName) {
-		
-		
-		
 		ImageIcon iconic = new ImageIcon("resources/Images/winner.png");
 		JOptionPane.showMessageDialog(null, "Congratulations!\n"+ winnerName, "Best players today!!", JOptionPane.INFORMATION_MESSAGE, iconic );
 	}
