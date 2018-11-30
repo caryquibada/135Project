@@ -56,7 +56,7 @@ public class Server extends JFrame implements Runnable{
 	private JTextField commandLine;
 	Thread clients;
 	private JScrollPane scrollPane;
-	public int drawerTurn=0,guesserCount=1,currGuess=1,drawerCount=1,guessThreshold=1,rounds=0,scoreCount=1,voteCount=0,voteThresh=1,endCount = 0,  roundCount = 0;
+	public int drawerTurn=0,guesserCount=1,currGuess=1,drawerCount=1,guessThreshold=1,rounds=0,scoreCount=1,voteCount=0,voteThresh=1,endCount = 0,  roundCount = 0,restartCount=1;
 	private String[] playerwords=new String[6];
 	public Server(int port) throws IOException{
 		setResizable(false); //Constructor for opening the Datagram Socket on port given by the server creator.
@@ -77,14 +77,7 @@ public class Server extends JFrame implements Runnable{
 		runServer=new Thread(this,"Server");
 		runServer.start();
 		logToServer("Server running on port: "+port);
-		String[] words=readFile("resources/words.txt");
-		Random rand = new Random();
 		
-		for(int i=0;i<6;i++) {
-			int n = rand.nextInt(words.length);
-			playerwords[i]=words[n];
-			logToServer(playerwords[i]);
-		}
 		
 	}
 	public void run(){
@@ -311,9 +304,30 @@ public class Server extends JFrame implements Runnable{
 					}
 				  break;
 			case	"27":
-				
-				
-				
+				logToServer(message);
+				if(message.substring(2).trim().equals("Y")) {
+					
+					logToServer("Restart: "+restartCount);
+					if(restartCount==players.size()) {
+						sendToDrawers("01Restarting game!");
+						sendToDrawers("31");
+						players.clear();
+						shuffleWords();
+						roundCount=0;
+						rounds=0;
+						endCount=0;
+						restartCount=1;
+						drawerTurn=0;
+						for(int i=0;i<clientList.size();i++) {
+							clientList.get(i).score=0;
+							System.out.println(clientList.get(i).score);
+						}
+						
+					}
+					restartCount++;
+				}else {
+					sendToDrawers("30End");
+				}
 				break;
 				
 			default: 
@@ -361,7 +375,7 @@ public class Server extends JFrame implements Runnable{
 		logToServer("drawerTurn: "+drawerTurn+" Current drawer: "+players.get(drawerTurn)+" "+players.toString());
 		drawerTurn++;
 	}
-	public void checkGameStart(){
+	public void checkGameStart() throws IOException{
 		
 		int readyPlayers=0;
 		for(int i=0;i<clientList.size();i++){
@@ -386,7 +400,7 @@ public class Server extends JFrame implements Runnable{
 		}
 	}
 
-	public void getGuesser(){
+	public void getGuesser() throws IOException{
 		if(rounds==0) {
 			shufflePlayers();
 			shuffleWords();
@@ -413,6 +427,7 @@ public class Server extends JFrame implements Runnable{
 		guesserCount=0;
 	}
 	public void shufflePlayers(){
+		players.clear();
 		for(int i=0;i<clientList.size();i++){
 			players.add(clientList.get(i).getName());
 		}
@@ -458,7 +473,15 @@ public class Server extends JFrame implements Runnable{
 	}
 
 	
-	public void shuffleWords(){
+	public void shuffleWords() throws IOException{
+		String[] inputwords=readFile("resources/words.txt");
+		Random rand = new Random();
+		words.clear();
+		for(int i=0;i<6;i++) {
+			int n = rand.nextInt(inputwords.length);
+			playerwords[i]=inputwords[n];
+			logToServer(playerwords[i]);
+		}
 		for(int i=0;i<clientList.size();i++){
 			words.add(playerwords[i]);
 		}

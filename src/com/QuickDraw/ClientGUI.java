@@ -342,17 +342,29 @@ public class ClientGUI extends JFrame implements Runnable{
 				roundCount=Integer.parseInt(message.substring(2).trim());
 				printToChat("01Round "+roundCount+" of " + numberOfReadyPlayers  );
 				break;
-			
 			case	"26":
-				
 				printToChat("01GameENDED");
 			//	client.sendMessage(("27Winner").getBytes());
 				winnerName = message.substring(2).trim();
-				endScreen(winnerName);
-				endCountdown();
+				int choice=endScreen(winnerName);
+				if(choice==0) {
+					client.sendMessage("27Y".getBytes());
+				}else {
+					client.sendMessage("27N".getBytes());
+				}
 				break;
 			case	"28":
 				filename=message.substring(2).trim();
+				break;
+			case	"29":
+				
+				break;
+			case	"30":
+				endCountdown();
+				break;
+			case	"31":
+				client.score=0;
+				client.sendMessage("19".getBytes());
 				break;
 			default:
 				System.out.println(filename);
@@ -360,6 +372,7 @@ public class ClientGUI extends JFrame implements Runnable{
 			    ByteArrayInputStream input_stream= new ByteArrayInputStream(input);
 			    BufferedImage img = ImageIO.read(input_stream);
 			    ImageIO.write(img, "jpg", new File("resources/Images/"+filename+".jpg"));
+			    updatePanels();
 			    break;
 		}
 	}
@@ -843,8 +856,6 @@ public class ClientGUI extends JFrame implements Runnable{
 				printToChat("01"+countdown+"");
 				countdown--;
 				if(countdown==0) {
-					File delete = new File("resources/Images/"+client.getName()+".png");
-					delete.delete();
 					System.exit(0);
 					timer.cancel();
 				}
@@ -867,8 +878,11 @@ public class ClientGUI extends JFrame implements Runnable{
 			}
 		},0,1000);
 	}
-	private void endScreen(String winnerName) {
+	private int endScreen(String winnerName) {
 		ImageIcon iconic = new ImageIcon("resources/Images/winner.png");
 		JOptionPane.showMessageDialog(null, "Congratulations!\n"+ winnerName, "Best players today!!", JOptionPane.INFORMATION_MESSAGE, iconic );
+		int choice=JOptionPane.showConfirmDialog(null, "Want to play again?", "Restart?", JOptionPane.YES_NO_OPTION);
+		System.out.println(choice);
+		return choice;
 	}
 }
