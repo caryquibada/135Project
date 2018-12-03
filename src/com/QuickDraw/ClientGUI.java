@@ -94,7 +94,7 @@ public class ClientGUI extends JFrame implements Runnable{
     private List<String> names = new ArrayList<String>();
     private List<JLabel> labels = new ArrayList<JLabel>();
 	public ClientGUI(String name,String IPAddress, int port){
-		setTitle("QuickDraw! \t"+name);
+		setTitle("QuickDraw! \t"+name+"'s Client");
 		setBackground(new Color(255, 255, 255));
 		addWindowListener(new WindowAdapter() {
 			@Override
