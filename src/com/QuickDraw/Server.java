@@ -293,7 +293,7 @@ public class Server extends JFrame implements Runnable{
 					for(int i=0;i<clientList.size();i++){
 						scoreWinner.add(clientList.get(i).score);
 					}
-					logToServer("Max Val: "+ Collections.max(scoreWinner, null));
+					//logToServer("Max Val: "+ Collections.max(scoreWinner, null));
 					int max = Collections.max(scoreWinner);
 					String winnerName = "";
 					for(int i = 0 ; i<clientList.size(); i++){
@@ -311,7 +311,7 @@ public class Server extends JFrame implements Runnable{
 				  }
 				 break;
 			case	"27":
-				logToServer(message);
+				//logToServer(message);
 				if(message.substring(2).trim().equals("Y")) {
 					logToServer("Restart: "+restartCount);
 					if(restartCount==players.size()) {

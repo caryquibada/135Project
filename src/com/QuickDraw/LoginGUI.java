@@ -51,7 +51,7 @@ public class LoginGUI extends JFrame {
 		setForeground(new Color(255, 255, 255));
 		setTitle("Login");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(0, 0, 1150, 425);
+		setBounds(0, 0, 614, 440);
 		contentPane = new JPanel();
 		contentPane.setVisible(true);
 		contentPane.setBackground(new Color(255, 255, 255));
@@ -61,19 +61,20 @@ public class LoginGUI extends JFrame {
 		//Name text field
 		NameField = new JTextField();
 		NameField.setFont(new Font("Arial", Font.PLAIN, 18));
-		NameField.setBounds(155, 293, 130, 38);
+		NameField.setBounds(69, 373, 124, 27);
 		contentPane.add(NameField);
 		NameField.setColumns(10);
-		JLabel lblName = new JLabel("NAME:");
-		lblName.setFont(new Font("Trebuchet MS", Font.BOLD, 24));
-		lblName.setBounds(54, 296, 91, 27);
+		JLabel lblName = new JLabel("Name:");
+		lblName.setBackground(Color.WHITE);
+		lblName.setFont(new Font("Trebuchet MS", Font.BOLD, 18));
+		lblName.setBounds(10, 373, 91, 27);
 		contentPane.add(lblName);
 		
 		
 		
 		//IP text field
 		IPField = new JTextField();
-		IPField.setFont(new Font("Arial", Font.PLAIN, 15));
+		IPField.setFont(new Font("Arial", Font.PLAIN, 12));
 		String[] IP;
 		try {
 			IP = InetAddress.getLocalHost().toString().split("/");
@@ -85,11 +86,11 @@ public class LoginGUI extends JFrame {
 		}
 		
 		IPField.setColumns(10);
-		IPField.setBounds(863, 38, 130, 44);
+		IPField.setBounds(228, 371, 103, 31);
 		contentPane.add(IPField);
-		lblIpAddress = new JLabel("IP Address:");
-		lblIpAddress.setFont(new Font("Trebuchet MS", Font.BOLD, 24));
-		lblIpAddress.setBounds(727, 51, 151, 31);
+		lblIpAddress = new JLabel("IP:");
+		lblIpAddress.setFont(new Font("Trebuchet MS", Font.BOLD, 16));
+		lblIpAddress.setBounds(203, 372, 35, 31);
 		contentPane.add(lblIpAddress);
 		
 		//Port text field
@@ -97,11 +98,11 @@ public class LoginGUI extends JFrame {
 		PortField.setFont(new Font("Arial", Font.PLAIN, 14));
 		PortField.setText("3000");
 		PortField.setColumns(10);
-		PortField.setBounds(863, 93, 130, 44);
+		PortField.setBounds(385, 370, 56, 31);
 		contentPane.add(PortField);
 		lblPort = new JLabel("Port:");
-		lblPort.setFont(new Font("Trebuchet MS", Font.BOLD, 24));
-		lblPort.setBounds(795, 105, 130, 32);
+		lblPort.setFont(new Font("Trebuchet MS", Font.BOLD, 14));
+		lblPort.setBounds(341, 371, 49, 32);
 		contentPane.add(lblPort);
 		
 		//LOGIN button
@@ -118,13 +119,13 @@ public class LoginGUI extends JFrame {
 			}
 		});
 		LoginBTN.setFont(new Font("Yu Gothic UI", Font.BOLD, 26));
-		LoginBTN.setBounds(295, 264, 124, 87);
+		LoginBTN.setBounds(462, 366, 125, 36);
 		contentPane.add(LoginBTN);
 		BufferedImage img = ImageIO.read(new File("resources/Images/title.png"));
 		banner = new ImageIcon(img);
 		System.out.println(banner);
 		bannerField = new JLabel(banner);
-		bannerField.setBounds(0, 0, 1144, 391);
+		bannerField.setBounds(0, 0, 610, 416);
 		contentPane.add(bannerField);
 	} 
 	//Calling the ClientGUI class

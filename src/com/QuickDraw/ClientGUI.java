@@ -93,8 +93,9 @@ public class ClientGUI extends JFrame implements Runnable{
     private List<JLabel> panels= new ArrayList<JLabel>();
     private List<String> names = new ArrayList<String>();
     private List<JLabel> labels = new ArrayList<JLabel>();
+    
 	public ClientGUI(String name,String IPAddress, int port){
-		setTitle("QuickDraw! \t"+name);
+		setTitle("QuickDraw! \t"+name+"'s Client");
 		setBackground(new Color(255, 255, 255));
 		addWindowListener(new WindowAdapter() {
 			@Override
@@ -345,8 +346,7 @@ public class ClientGUI extends JFrame implements Runnable{
 				printToChat("01Round "+roundCount+" of " + names.size() );
 				break;
 			case	"26":
-				printToChat("01GameENDED");
-			//	client.sendMessage(("27Winner").getBytes());
+				printToChat("01Game Ended");
 				winnerName = message.substring(2).trim();
 				int choice=endScreen(winnerName);
 				if(choice==0) {
@@ -844,14 +844,14 @@ public class ClientGUI extends JFrame implements Runnable{
 	
 	public void winWindow() {
 		JOptionPane winDialog= new JOptionPane("Win!");
-		winDialog.showMessageDialog(contentPane,"Winner!!", "Correct!", JOptionPane.INFORMATION_MESSAGE);
+		winDialog.showMessageDialog(contentPane,"Correct!", "Correct!", JOptionPane.INFORMATION_MESSAGE);
 	}
 	//Timer seconds
 	public void setSeconds(int seconds){
 		this.seconds=seconds;
 	}
 	public void loseWindow(String word) {
-		JOptionPane loseDialog= new JOptionPane("Lose!");
+		JOptionPane loseDialog= new JOptionPane("Wrong!");
 		loseDialog.showMessageDialog(contentPane, "The word was "+word,"Time's up" , JOptionPane.ERROR_MESSAGE);
 
 	}
@@ -886,7 +886,7 @@ public class ClientGUI extends JFrame implements Runnable{
 		},0,1000);
 	}
 	private int endScreen(String winnerName) {
-		ImageIcon iconic = new ImageIcon("resources/Images/winner.png");
+		ImageIcon iconic = new ImageIcon("resources/Images/"+filename+".jpg");
 		JOptionPane.showMessageDialog(null, "Congratulations!\n"+ winnerName, "Best players today!!", JOptionPane.INFORMATION_MESSAGE, iconic );
 		int choice=JOptionPane.showConfirmDialog(null, "Want to play again?", "Restart?", JOptionPane.YES_NO_OPTION);
 		System.out.println(choice);
