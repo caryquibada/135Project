@@ -342,7 +342,7 @@ public class ClientGUI extends JFrame implements Runnable{
 				break;
 			case	"25":
 				roundCount=Integer.parseInt(message.substring(2).trim());
-				printToChat("01Round "+roundCount+" of " + numberOfReadyPlayers  );
+				printToChat("01Round "+roundCount+" of " + names.size() );
 				break;
 			case	"26":
 				printToChat("01GameENDED");
@@ -362,6 +362,7 @@ public class ClientGUI extends JFrame implements Runnable{
 				
 				break;
 			case	"30":
+				printToChat("01Restart vote wasn't unanimous. Closing client.");
 				endCountdown();
 				break;
 			case	"31":
@@ -370,6 +371,7 @@ public class ClientGUI extends JFrame implements Runnable{
 				scoreField.setText("Your score: "+client.score );
 				client.sendMessage(("18"+client.getName()+":"+client.score).getBytes());
 				client.sendMessage("19".getBytes());
+				printToChat("01Game has restarted. Ready up to start round.");
 				break;
 			default:
 				System.out.println(filename);
