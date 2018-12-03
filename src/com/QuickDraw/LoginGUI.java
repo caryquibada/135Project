@@ -98,11 +98,11 @@ public class LoginGUI extends JFrame {
 		PortField.setFont(new Font("Arial", Font.PLAIN, 14));
 		PortField.setText("3000");
 		PortField.setColumns(10);
-		PortField.setBounds(389, 375, 56, 27);
+		PortField.setBounds(385, 370, 56, 31);
 		contentPane.add(PortField);
 		lblPort = new JLabel("Port:");
 		lblPort.setFont(new Font("Trebuchet MS", Font.BOLD, 14));
-		lblPort.setBounds(345, 372, 49, 32);
+		lblPort.setBounds(341, 371, 49, 32);
 		contentPane.add(lblPort);
 		
 		//LOGIN button
@@ -119,7 +119,7 @@ public class LoginGUI extends JFrame {
 			}
 		});
 		LoginBTN.setFont(new Font("Yu Gothic UI", Font.BOLD, 26));
-		LoginBTN.setBounds(474, 363, 124, 39);
+		LoginBTN.setBounds(462, 366, 125, 36);
 		contentPane.add(LoginBTN);
 		BufferedImage img = ImageIO.read(new File("resources/Images/title.png"));
 		banner = new ImageIcon(img);
