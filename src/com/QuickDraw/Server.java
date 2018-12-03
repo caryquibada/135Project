@@ -51,12 +51,12 @@ public class Server extends JFrame implements Runnable{
 	private DatagramSocket socket;
 	private int port,seconds,voted=0;
 	private Thread runServer,receive,send;
-	private boolean serverRunning;
+	private boolean serverRunning, notOpen=true, notDone=true;
 	private JTextArea responseLog;
 	private JTextField commandLine;
 	Thread clients;
 	private JScrollPane scrollPane;
-	public int drawerTurn=0,guesserCount=1,currGuess=1,drawerCount=1,guessThreshold=1,rounds=0,scoreCount=1,voteCount=0,voteThresh=1,endCount = 0,  roundCount = 0,restartCount=1;
+	public int drawerTurn=0,guesserCount=1,currGuess=1,drawerCount=1,guessThreshold=1,rounds=0,scoreCount=1,voteCount=0,voteThresh=1,endCount = 0,  roundCount = 0,restartCount=1,checker=0, scoreRegistered=0;
 	private String[] playerwords=new String[6];
 	public Server(int port) throws IOException{
 		setResizable(false); //Constructor for opening the Datagram Socket on port given by the server creator.
@@ -228,6 +228,7 @@ public class Server extends JFrame implements Runnable{
 				for(int i=0;i<clientList.size();i++) {
 					clientList.get(i).ready="false";
 				}
+				endCount++;
 				break;
 			case	"18":
 				String[] scores=message.substring(2).trim().split(":");
@@ -236,23 +237,25 @@ public class Server extends JFrame implements Runnable{
 						clientList.get(i).score=Integer.parseInt(scores[1]);
 					}
 				}
-				
 				break;
 			case	"19":
-				if(scoreCount==players.size()) {
-					String scoreList="01Scores\n";
-					for(int i=0;i<clientList.size();i++) {
-						scoreList=scoreList+clientList.get(i).getName()+"-"+clientList.get(i).score+"\n";
+				logToServer("ScoreCount:"+scoreCount+" PlayerSize"+players.size());
+					if(scoreCount==players.size()) {
+						String scoreList="01Scores\n";
+						for(int i=0;i<clientList.size();i++) {
+							scoreList=scoreList+clientList.get(i).getName()+"-"+clientList.get(i).score+"\n";
+							
+						}
+						sendToDrawers(scoreList);
+						names="24";
+						for(int i=0;i<clientList.size();i++) {
+							names=names+clientList.get(i).getName()+"-"+clientList.get(i).score+"\t";
+							logToServer("Score: "+clientList.get(i).score);
+						}
+						sendToDrawers(names);
+						scoreCount=0;
+						
 					}
-					sendToDrawers(scoreList);
-					names="24";
-					for(int i=0;i<clientList.size();i++) {
-						names=names+clientList.get(i).getName()+"-"+clientList.get(i).score+"\t";
-					}
-					sendToDrawers(names);
-					scoreCount=0;
-					
-				}
 				scoreCount++;
 				break;
 			case	"21":
@@ -281,14 +284,13 @@ public class Server extends JFrame implements Runnable{
 					}
 					logToServer("Vote Winners:"+voteWinners);
 					sendToDrawers(voteWinners);
-					voteThresh=0;
+					voteThresh=-1;
 					voted=0;
 				}
 				voteThresh++;
 				break;
 			case	"25":
-				  endCount++;
-				  for(int i=0;i<clientList.size();i++){
+					for(int i=0;i<clientList.size();i++){
 						scoreWinner.add(clientList.get(i).score);
 					}
 					logToServer("Max Val: "+ Collections.max(scoreWinner, null));
@@ -299,25 +301,30 @@ public class Server extends JFrame implements Runnable{
 							winnerName = winnerName +clientList.get(i).getName()+"\n";
 						}
 					}
-				  if((players.size() == 4 && endCount == 12) || (players.size() == 5 && endCount == 20) || (players.size() == 6 && endCount == 24)){
-					sendToDrawers("26"+winnerName+"with the score of "+max);
-					}
-				  break;
+					
+				  if((players.size() == 4 && endCount == 16) || (players.size() == 5 && endCount == 25) || (players.size() == 6 && endCount == 36)){
+					  if(checker==0) {
+						  checker++;
+						  sendToDrawers("26"+winnerName+"with the score of "+max);
+						  scoreWinner.clear();
+					  }
+				  }
+				 break;
 			case	"27":
 				logToServer(message);
 				if(message.substring(2).trim().equals("Y")) {
-					
 					logToServer("Restart: "+restartCount);
 					if(restartCount==players.size()) {
 						sendToDrawers("01Restarting game!");
 						sendToDrawers("31");
-						players.clear();
 						shuffleWords();
 						roundCount=0;
 						rounds=0;
-						endCount=0;
 						restartCount=1;
+						endCount=0;
 						drawerTurn=0;
+						scoreCount=1;
+						checker=0;
 						for(int i=0;i<clientList.size();i++) {
 							clientList.get(i).score=0;
 							System.out.println(clientList.get(i).score);

@@ -321,6 +321,7 @@ public class ClientGUI extends JFrame implements Runnable{
 				scoreField.setText("Your score: "+client.score );
 				client.sendMessage(("18"+client.getName()+":"+client.score).getBytes());
 				client.sendMessage("19".getBytes());
+				
 				break;
 			case	"24":
 				String[] namesSplit=message.substring(2).trim().split("\t");
@@ -337,6 +338,7 @@ public class ClientGUI extends JFrame implements Runnable{
 					updatePanels();
 				}
 				updatePanels();
+				client.sendMessage(("25").getBytes());
 				break;
 			case	"25":
 				roundCount=Integer.parseInt(message.substring(2).trim());
@@ -364,6 +366,9 @@ public class ClientGUI extends JFrame implements Runnable{
 				break;
 			case	"31":
 				client.score=0;
+				names.clear();	
+				scoreField.setText("Your score: "+client.score );
+				client.sendMessage(("18"+client.getName()+":"+client.score).getBytes());
 				client.sendMessage("19".getBytes());
 				break;
 			default:
@@ -371,7 +376,11 @@ public class ClientGUI extends JFrame implements Runnable{
 				byte[] input=msg.getData();
 			    ByteArrayInputStream input_stream= new ByteArrayInputStream(input);
 			    BufferedImage img = ImageIO.read(input_stream);
-			    ImageIO.write(img, "jpg", new File("resources/Images/"+filename+".jpg"));
+			    try {
+			    	 ImageIO.write(img, "jpg", new File("resources/Images/"+filename+".jpg"));
+			    }catch(Exception e) {
+			    	
+			    }
 			    updatePanels();
 			    break;
 		}
@@ -421,7 +430,6 @@ public class ClientGUI extends JFrame implements Runnable{
 	    int rc = JOptionPane.showOptionDialog(null, "Vote for player", "Voting",
 	        JOptionPane.WARNING_MESSAGE, 0, null, drawers, null);
 	    client.sendMessage(("21"+drawers[rc]).getBytes());
-	    client.sendMessage(("25").getBytes());
 	}
 	
 	public void gameStartCountdown() {
@@ -589,7 +597,6 @@ public class ClientGUI extends JFrame implements Runnable{
 				}
 				seconds--;
 				if(seconds==0){
-					
 					progressbar.setValue(0);
 					progress=0;
 					if(correct) {
@@ -605,8 +612,6 @@ public class ClientGUI extends JFrame implements Runnable{
 						client.score=client.score+1;
 					}
 					client.sendMessage("16Unready".getBytes());
-					client.sendMessage(("18"+client.getName()+":"+client.score).getBytes());
-					client.sendMessage("19".getBytes());
 					clearFields();
 					setSeconds(allSeconds);
 					drawTime=allSeconds;
@@ -851,7 +856,7 @@ public class ClientGUI extends JFrame implements Runnable{
 	public void closeCountdown() {
 		Timer timer = new Timer();
 		timer.schedule(new TimerTask(){
-			int countdown=5;
+			int countdown=3;
 			public void run() {
 				printToChat("01"+countdown+"");
 				countdown--;
@@ -865,7 +870,7 @@ public class ClientGUI extends JFrame implements Runnable{
 	public void endCountdown() {
 		Timer timer = new Timer();
 		timer.schedule(new TimerTask(){
-			int countdown=10;
+			int countdown=3;
 			public void run() {
 				printToChat("01"+countdown+"");
 				countdown--;
